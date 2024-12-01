@@ -1,0 +1,16 @@
+{
+    "cacheDirectories": [
+        "auth-frontend/node_modules"
+    ],
+    "scripts": {
+        "build": "cd auth-frontend && npm install && npm run build"
+    },
+    "engines": {
+        "node": "18.x"
+    },
+    "dependencies": {
+        "@vitejs/plugin-react": "^4.2.0",
+        "axios": "^1.7.8",
+        "vite": "^5.0.0"
+    }
+}

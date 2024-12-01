@@ -1,0 +1,6 @@
+venv
+.env
+__pycache__
+
+# Add this line to ensure the frontend build is included
+!frontend/dist
