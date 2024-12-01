@@ -133,10 +133,9 @@ api_router = APIRouter(prefix="/api")
 @api_router.post("/register")  # Note: removed /api prefix
 async def register_user(user_data: UserRegister):
     db_user = {
-        "username": user_data.email,  # Using email as username
-        "hashed_password": get_hashed_password(user_data.password),
-        "email": user_data.email,
         "full_name": user_data.fullName,
+        "email": user_data.email,
+        "hashed_password": get_hashed_password(user_data.password),
         "disabled": False
     }
 
@@ -167,7 +166,6 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 @api_router.get("/v1/profile")
 async def get_user_profile(current_user: User = Depends(get_current_active_user)):
     user_data = {
-        "username": current_user.username,
         "full_name": current_user.full_name,
         "email": current_user.email,
     }

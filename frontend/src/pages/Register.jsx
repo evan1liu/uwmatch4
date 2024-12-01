@@ -14,10 +14,11 @@ import axios from 'axios';
 
 export default function Register() {
     const [formData, setFormData] = useState({
-        fullName: '',     // String: User's full name
-        email: '',        // String: User's email address
-        password: '',     // String: User's chosen password
-        confirmPassword: ''// String: Password verification field
+        firstName: '',    // New field
+        lastName: '',     // New field
+        email: '',
+        password: '',
+        confirmPassword: ''
     });
     const [error, setError] = useState('');
     const navigate = useNavigate();
@@ -34,9 +35,15 @@ export default function Register() {
         }
 
         try {
-            // for deploying, change this to /api/register when deploying
-            // for testing locaclly, change this to http://127.0.0.1:8000/api/register
-            await axios.post('/api/register', formData);
+            // Combine first and last name before sending
+            const submitData = {
+                fullName: `${formData.firstName} ${formData.lastName}`.trim(),
+                email: formData.email,
+                password: formData.password,
+                confirmPassword: formData.confirmPassword
+            };
+
+            await axios.post('/api/register', submitData);
             navigate('/login');
         } catch (err) {
             if (err.response && err.response.status === 400) {
@@ -77,10 +84,19 @@ export default function Register() {
                     <form onSubmit={handleSubmit}>
                         <TextField
                             fullWidth
-                            label="Full Name"
-                            name="fullName"
+                            label="First Name"
+                            name="firstName"
                             margin="normal"
-                            value={formData.fullName}
+                            value={formData.firstName}
+                            onChange={handleChange}
+                            required
+                        />
+                        <TextField
+                            fullWidth
+                            label="Last Name"
+                            name="lastName"
+                            margin="normal"
+                            value={formData.lastName}
                             onChange={handleChange}
                             required
                         />
