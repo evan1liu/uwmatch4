@@ -178,9 +178,9 @@ app.include_router(api_router)
 
 # FOR PRODUCTION
 # Mount static files after including the router
-app.mount("/", StaticFiles(directory="auth-frontend/dist", html=True), name="frontend")
+app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="frontend")
 
 # Optional: Fallback route for SPA (if needed)
 @app.get("/{full_path:path}")
 async def serve_spa(full_path: str):
-    return FileResponse("auth-frontend/dist/index.html")
+    return FileResponse("frontend/dist/index.html")
