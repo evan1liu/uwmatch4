@@ -298,4 +298,6 @@ if ENV == 'production':
     
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
+        if full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="API route not found")
         return FileResponse("frontend/dist/index.html")
