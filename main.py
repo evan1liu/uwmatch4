@@ -222,11 +222,13 @@ async def get_course(course_id: str):
 # Include the router
 app.include_router(api_router)
 
-# FOR PRODUCTION
-# Mount static files after including the router
-# app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="frontend")
+# Get environment
+ENV = os.getenv('ENV', 'development')
 
-# # Optional: Fallback route for SPA (if needed)
-# @app.get("/{full_path:path}")
-# async def serve_spa(full_path: str):
-#     return FileResponse("frontend/dist/index.html")
+# Only serve static files in production
+if ENV == 'production':
+    app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="frontend")
+    
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        return FileResponse("frontend/dist/index.html")
