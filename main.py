@@ -39,6 +39,7 @@ client = AsyncIOMotorClient(MONGODB_URL)
 db = client.uwmatch  # Database name
 user_collection = db.users  # Collection name
 course_collection = db.courses  # Add this line for courses collection
+saved_course_collection = db.saved_courses  # Add this line for saved courses collection
 
 # Pydantic models
 class UserRegister(BaseModel):
@@ -59,8 +60,20 @@ class User(BaseModel):
     full_name: str or None = None
     disabled: bool or None = None
 
-class UserInDB(User):
+class UserInDB(BaseModel):
+    id: str | None = None
+    email: str
+    full_name: str | None = None
+    disabled: bool | None = None
     hashed_password: str
+
+    @classmethod
+    def from_mongo(cls, mongo_user):
+        if mongo_user:
+            # Convert MongoDB _id to string id
+            mongo_user['id'] = str(mongo_user['_id'])
+            return cls(**mongo_user)
+        return None
 
 class Course(BaseModel):
     title: str
@@ -71,6 +84,11 @@ class Course(BaseModel):
     learning_outcomes: str | None = None
     repeatable: bool | None = None
     requisites: str | None = None
+
+class SavedCourse(BaseModel):
+    user_id: str
+    course_id: str
+    saved_at: datetime | None = None
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -83,9 +101,11 @@ def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 async def get_user(email: str):
-    user = await user_collection.find_one({"email": email})
-    if user:
-        return UserInDB(**user)
+    user_dict = await db.users.find_one({"email": email})
+    if user_dict:
+        # Convert MongoDB _id to string id
+        user_dict['id'] = str(user_dict['_id'])
+        return UserInDB(**user_dict)
     return None
 
 async def create_user(user_data: dict):
@@ -218,6 +238,53 @@ async def get_course(course_id: str):
         del course["_id"]
         return course
     raise HTTPException(status_code=404, detail="Course not found")
+
+@api_router.post("/save-course/{course_id}")
+async def save_course(course_id: str, current_user: UserInDB = Depends(get_current_active_user)):
+    # Check if course is already saved
+    existing_save = await saved_course_collection.find_one({
+        "user_id": current_user.id,
+        "course_id": course_id
+    })
+    
+    if existing_save:
+        # If already saved, delete it
+        await saved_course_collection.delete_one({
+            "user_id": current_user.id,
+            "course_id": course_id
+        })
+        return {
+            "message": "Course unsaved successfully"
+        }
+
+    # If not saved, save it
+    saved_course = {
+        "user_id": current_user.id,
+        "course_id": course_id,
+        "saved_at": datetime.utcnow()
+    }
+    
+    result = await saved_course_collection.insert_one(saved_course)
+    return {
+        "message": "Course saved successfully",
+        "saved_course_id": str(result.inserted_id)
+    }
+
+@api_router.get("/saved-courses")
+async def get_saved_courses(current_user: UserInDB = Depends(get_current_active_user)):
+    saved_courses = await saved_course_collection.find({
+        "user_id": current_user.id
+    }).to_list(length=None)
+    
+    course_ids = [ObjectId(sc["course_id"]) for sc in saved_courses]
+    
+    courses = await course_collection.find({"_id": {"$in": course_ids}}).to_list(length=None)
+    
+    return [{
+        "id": str(course["_id"]),
+        "title": course.get("title", "No title"),
+        "credits": course.get("credits", 0)
+    } for course in courses]
 
 # Include the router
 app.include_router(api_router)

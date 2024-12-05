@@ -6,6 +6,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import CourseList from './pages/CourseList';
 import CourseDetail from './pages/CourseDetail';
+import SavedCourses from './pages/SavedCourses';
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -28,6 +29,7 @@ function App() {
                     <Route path="/" element={<Navigate to="/login" />} />
                     <Route path="/courses" element={<CourseList />} />
                     <Route path="/courses/:id" element={<CourseDetail />} />
+                    <Route path="/saved-courses" element={<SavedCourses />} />
             </Routes>
         </Container>
     );

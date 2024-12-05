@@ -10,6 +10,7 @@ import {
     Box
 } from '@mui/material';
 import API_BASE_URL from '../api';
+import NavBar from './NavBar';
 
 function CourseDetail() {
     const [course, setCourse] = useState(null);
@@ -57,9 +58,7 @@ function CourseDetail() {
 
     return (
         <Container>
-            <Button onClick={() => navigate('/courses')} sx={{ mb: 2 }}>
-                Back to Courses
-            </Button>
+            <NavBar title={course.title} />
             <Card>
                 <CardContent>
                     <Typography variant="h4" gutterBottom>

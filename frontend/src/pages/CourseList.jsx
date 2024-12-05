@@ -6,34 +6,48 @@ import {
     Typography, 
     Grid, 
     Container,
-    CircularProgress
+    CircularProgress,
+    Button
 } from '@mui/material';
 import NavBar from './NavBar';
 import API_BASE_URL from '../api';
+import { useNavigate } from 'react-router-dom';
 
 function CourseList() {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [savedCourses, setSavedCourses] = useState(new Set());
+    const navigate = useNavigate();
 
     useEffect(() => {
         const token = localStorage.getItem('token');
         
-        if (!token) { // if the user doesn't have a token, redirect them to the login page
+        if (!token) {
             navigate('/login');
             return;
         }
         
         const fetchCourses = async () => {
             try {
-                const response = await fetch(`${API_BASE_URL}/courses`, {
+                // Fetch courses
+                const coursesResponse = await fetch(`${API_BASE_URL}/courses`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
-                const data = await response.json();
-                setCourses(data);
+                const coursesData = await coursesResponse.json();
+                setCourses(coursesData);
+
+                // Fetch saved courses status
+                const savedResponse = await fetch(`${API_BASE_URL}/saved-courses`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const savedData = await savedResponse.json();
+                setSavedCourses(new Set(savedData.map(course => course.id)));
             } catch (error) {
-                console.error('Error fetching courses:', error);
+                console.error('Error fetching data:', error);
             } finally {
                 setLoading(false);
             }
@@ -41,6 +55,45 @@ function CourseList() {
 
         fetchCourses();
     }, []);
+
+    const handleSaveCourse = async (e, courseId) => {
+        // Prevent the click from bubbling up to the card link
+        e.preventDefault();
+        e.stopPropagation();
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/login');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/save-course/${courseId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update course save status');
+            }
+
+            // Toggle the saved status
+            setSavedCourses(prev => {
+                const newSet = new Set(prev);
+                if (newSet.has(courseId)) {
+                    newSet.delete(courseId);
+                } else {
+                    newSet.add(courseId);
+                }
+                return newSet;
+            });
+        } catch (error) {
+            console.error('Error updating course save status:', error);
+        }
+    };
 
     if (loading) {
         return <CircularProgress />;
@@ -65,6 +118,15 @@ function CourseList() {
                                         <Typography color="text.secondary">
                                             Credits: {course.credits}
                                         </Typography>
+                                        <Button 
+                                            onClick={(e) => handleSaveCourse(e, course.id)}
+                                            variant="contained"
+                                            color={savedCourses.has(course.id) ? "success" : "primary"}
+                                            size="small"
+                                            sx={{ mt: 2 }}
+                                        >
+                                            {savedCourses.has(course.id) ? "Saved" : "Save Course"}
+                                        </Button>
                                     </CardContent>
                                 </Card>
                             </Link>

@@ -21,6 +21,9 @@ export default function NavBar({ title }) {
                 <Button color="inherit" onClick={() => navigate('/courses')}>
                     Courses
                 </Button>
+                <Button color="inherit" onClick={() => navigate('/saved-courses')}>
+                    Saved Courses
+                </Button>
                 <Button color="inherit" onClick={handleLogout}>
                     Logout
                 </Button>
