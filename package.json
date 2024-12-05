@@ -9,6 +9,7 @@
         "node": "18.x"
     },
     "dependencies": {
+        "@mui/icons-material": "^6.1.10",
         "@vitejs/plugin-react": "^4.2.0",
         "axios": "^1.7.8",
         "vite": "^5.0.0"

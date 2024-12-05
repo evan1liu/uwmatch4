@@ -4,3 +4,4 @@ __pycache__
 
 # Add this line to ensure the frontend build is included
 !frontend/dist
+node_modules
