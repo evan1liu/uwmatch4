@@ -4,6 +4,8 @@ import { Container } from '@mui/material';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import CourseList from './pages/CourseList';
+import CourseDetail from './pages/CourseDetail';
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -24,6 +26,8 @@ function App() {
                         element={<Dashboard />} 
                     />
                     <Route path="/" element={<Navigate to="/login" />} />
+                    <Route path="/courses" element={<CourseList />} />
+                    <Route path="/courses/:id" element={<CourseDetail />} />
             </Routes>
         </Container>
     );

@@ -23,12 +23,11 @@ export default function Register() {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    // http://127.0.0.1:8000/register
-    // Option 2: Remove /api from frontend
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Check if passwords match
+        // Check if both passwords during register are the same
         if (formData.password !== formData.confirmPassword) {
             setError('Passwords do not match');
             return;  // Stop the submission if passwords don't match
@@ -40,10 +39,11 @@ export default function Register() {
                 fullName: `${formData.firstName} ${formData.lastName}`.trim(),
                 email: formData.email,
                 password: formData.password,
-                confirmPassword: formData.confirmPassword
             };
 
-            await axios.post('/api/register', submitData);
+            // for deploying, change this to /api/register
+            // for testing locaclly, change this to http://127.0.0.1:8000/api/register
+            await axios.post('http://127.0.0.1:8000/api/register', submitData);
             navigate('/login');
         } catch (err) {
             if (err.response && err.response.status === 400) {

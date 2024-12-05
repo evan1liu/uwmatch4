@@ -11,6 +11,7 @@ import {
     Link
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../config/api';
 
 export default function Login() {
     const [formData, setFormData] = useState({
@@ -27,9 +28,7 @@ export default function Login() {
         loginData.append('password', formData.password);
 
         try { 
-            // for deploying, change this to /api/token when deploying
-            // for testing locaclly, change this to http://127.0.0.1:8000/api/token
-            const response = await axios.post('/api/token', loginData, {
+            const response = await axios.post(`${API_BASE_URL}/token`, loginData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -39,7 +38,8 @@ export default function Login() {
         }
         catch (err) {
             console.error('Login error:', err);
-            setError('Invalid username or password');
+            setError(`Invalid username or password
+                     (Haven't registered yet? Register now!)`);
         }
     };
 
@@ -84,7 +84,11 @@ export default function Login() {
                             required
                         />
                         {error && (
-                            <Typography color="error" align="center" sx={{ mt: 1 }}>
+                            <Typography 
+                                color="error" 
+                                align="center" 
+                                sx={{ mt: 1, whiteSpace: 'pre-line' }}
+                            >
                                 {error}
                             </Typography>
                         )}
