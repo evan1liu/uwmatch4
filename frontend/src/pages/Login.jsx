@@ -11,7 +11,7 @@ import {
     Link
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import API_BASE_URL from '../config/api';
+import API_BASE_URL from '../api';
 
 export default function Login() {
     const [formData, setFormData] = useState({

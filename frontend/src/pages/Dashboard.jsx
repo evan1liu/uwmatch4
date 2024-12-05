@@ -11,7 +11,7 @@ import {
     Alert
 } from '@mui/material';
 import NavBar from './NavBar';
-import API_BASE_URL from '../config/api';
+import API_BASE_URL from '../api';
 
 export default function Dashboard() {
     const [userData, setUserData] = useState(null);

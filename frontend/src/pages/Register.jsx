@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_BASE_URL from '../api';
 
 export default function Register() {
     const [formData, setFormData] = useState({
@@ -41,9 +42,7 @@ export default function Register() {
                 password: formData.password,
             };
 
-            // for deploying, change this to /api/register
-            // for testing locaclly, change this to http://127.0.0.1:8000/api/register
-            await axios.post('http://127.0.0.1:8000/api/register', submitData);
+            await axios.post(`${API_BASE_URL}/register`, submitData);
             navigate('/login');
         } catch (err) {
             if (err.response && err.response.status === 400) {
