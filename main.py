@@ -294,10 +294,17 @@ ENV = os.getenv('ENV', 'development')
 
 # Only serve static files in production
 if ENV == 'production':
-    app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="frontend")
+    # Serve static files first
+    app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="static")
     
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
+        # Handle API routes
         if full_path.startswith("api/"):
             raise HTTPException(status_code=404, detail="API route not found")
+            
+        # For all other routes, serve the index.html
         return FileResponse("frontend/dist/index.html")
+    
+    # Mount the root last
+    app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="frontend")
