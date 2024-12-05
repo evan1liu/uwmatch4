@@ -177,7 +177,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 # the homepage for displaying user's information
-@api_router.get("/v1/profile")
+@api_router.get("/profile")
 async def get_user_profile(current_user: User = Depends(get_current_active_user)):
     user_data = {
         "full_name": current_user.full_name,
@@ -185,7 +185,7 @@ async def get_user_profile(current_user: User = Depends(get_current_active_user)
     }
     return user_data
 
-@api_router.get("/v1/courses")
+@api_router.get("/courses")
 async def get_courses():
     try:
         # Use course_collection instead of db.courses
@@ -210,7 +210,7 @@ async def get_courses():
             detail=f"Internal server error: {str(e)}"
         )
 
-@api_router.get("/v1/courses/{course_id}")
+@api_router.get("/courses/{course_id}")
 async def get_course(course_id: str):
     course = await db.courses.find_one({"_id": ObjectId(course_id)})
     if course:
