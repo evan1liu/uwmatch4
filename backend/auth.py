@@ -4,10 +4,10 @@ from typing import Optional
 from fastapi import Depends, HTTPException, status
 from jose import JWTError, jwt
 from fastapi.security import OAuth2PasswordBearer
-from app.config import settings
-from app.database import user_collection
-from app.models import Token, TokenData, UserInDB
-from app.utils import verify_password
+from backend.config import settings
+from backend.database import user_collection
+from backend.models import Token, TokenData, UserInDB
+from backend.utils import verify_password
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/token")
 

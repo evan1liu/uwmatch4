@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from bson import ObjectId
-from app.database import course_collection
-from app.models import Course
+from backend.database import course_collection
+from backend.models import Course
 
 router = APIRouter()
 

@@ -3,9 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from app.config import settings
-from app.routers import api_router
-from app.database import course_collection
+from backend.config import settings
+from backend.routers import api_router
+from backend.database import course_collection
 
 app = FastAPI()
 

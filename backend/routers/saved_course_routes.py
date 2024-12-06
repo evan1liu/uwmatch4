@@ -3,9 +3,9 @@ from bson import ObjectId
 from datetime import datetime
 from typing import List
 
-from app.database import saved_course_collection, course_collection
-from app.models import SavedCourse
-from app.auth import get_current_active_user, UserInDB
+from backend.database import saved_course_collection, course_collection
+from backend.models import SavedCourse
+from backend.auth import get_current_active_user, UserInDB
 
 router = APIRouter()
 
