@@ -207,92 +207,88 @@ async def get_user_profile(current_user: User = Depends(get_current_active_user)
 
 @api_router.get("/courses")
 async def get_courses():
-    try:
-        # Use course_collection instead of db.courses
-        courses = await course_collection.find().to_list(length=None)
-        # Debug: Print the first course to see its structure
-        if courses:
-            print("First course document:", courses[0])
-        else:
-            print("No courses found in database")
-            
-        return [{
-            "id": str(course["_id"]),
-            # Use .get() method to safely access dictionary keys
-            "title": course.get("title", "No title"),  # Provides a default value if key doesn't exist
-            "credits": course.get("credits", 0)  # Provides a default value if key doesn't exist
-        } for course in courses]
-    except Exception as e:
-        print(f"Error in get_courses: {str(e)}")
-        print(f"Full error details: {repr(e)}")  # Add more detailed error information
-        raise HTTPException(
-            status_code=500,
-            detail=f"Internal server error: {str(e)}"
-        )
+    # when the mongodb function find() is empty, it returns all the documents within this collection, so we're returning all the courses to the frontend
+    courses = await course_collection.find().to_list(length=None)
+    
+    # return only these three attributes for more simplified course information in the courses page
+    return [{
+        "id": str(course["_id"]),
+        "title": course.get("title"),
+        "credits": course.get("credits")
+    } for course in courses]
 
+# this route is what the frontend calls when the user clicks on each course card for reading more details
 @api_router.get("/courses/{course_id}")
 async def get_course(course_id: str):
     course = await db.courses.find_one({"_id": ObjectId(course_id)})
     if course:
-        course["id"] = str(course["_id"])
-        del course["_id"]
+        course["id"] = str(course["_id"]) # we need to convert the MongoDB ObjectID to an actualy JSON readable string
+        del course["_id"] # delete the MongoDB ObjectID before returning
         return course
     raise HTTPException(status_code=404, detail="Course not found")
 
+# this backend route handles the logic of saving and unsaving a course
+# we're using the same route because idk, it's just easier and simpler
 @api_router.post("/save-course/{course_id}")
 async def save_course(course_id: str, current_user: UserInDB = Depends(get_current_active_user)):
-    # Check if course is already saved
+    # Check if course is already saved (return None if it's not saved and return a complete document if it's saved)
     existing_save = await saved_course_collection.find_one({
         "user_id": current_user.id,
         "course_id": course_id
     })
     
     if existing_save:
-        # If already saved, delete it
+        # If already saved, delete it, since the user is most likely unsaving the course
         await saved_course_collection.delete_one({
             "user_id": current_user.id,
             "course_id": course_id
         })
-        return {
+        return { # return a message to the frontend
             "message": "Course unsaved successfully"
         }
 
-    # If not saved, save it
+    # add a new entry to the collection saved_courses with the user's id, the course_id, and the date time
     saved_course = {
         "user_id": current_user.id,
         "course_id": course_id,
         "saved_at": datetime.utcnow()
     }
     
+    # if the course is not saved, then we use the mongodb function insert_one to add this new entry
     result = await saved_course_collection.insert_one(saved_course)
-    return {
+    return { # return a message to the frontend along with the course_id
         "message": "Course saved successfully",
         "saved_course_id": str(result.inserted_id)
     }
 
 @api_router.get("/saved-courses")
-async def get_saved_courses(current_user: UserInDB = Depends(get_current_active_user)):
+async def get_saved_courses(current_user: UserInDB = Depends(get_current_active_user)): # with this Depends(), the user must have a valid JWT token since accessing this route is depended on get_current_active_user which is depended on get_current_user
     saved_courses = await saved_course_collection.find({
         "user_id": current_user.id
-    }).to_list(length=None)
+    }).to_list(length=None) # use the user's id to retrieve all the courses saved by that user, and then convert them into a list of objects (that contains user_id and course_id)
     
+    # in the original entry in the saved_courses collection, we saved the course_id as a string, but we need to convert it to MongoDB ObjectId to perform searching
     course_ids = [ObjectId(sc["course_id"]) for sc in saved_courses]
     
+    # essentially, with the $in search function, we can search with our list course_ids to retrieve a list of course objects that match the list of course_ids
     courses = await course_collection.find({"_id": {"$in": course_ids}}).to_list(length=None)
     
-    return [{
+    # we return each saved course to the frontend one by one
+    return [{ # only returning the course_id, the title, and the credits (just like the route /courses)
         "id": str(course["_id"]),
         "title": course.get("title", "No title"),
         "credits": course.get("credits", 0)
     } for course in courses]
 
-# Include the router
+# the router is /api
 app.include_router(api_router)
 
-# Get environment
+# If there's no environment vairable named ENV, default it to 'development'
 ENV = os.getenv('ENV', 'development')
 
-# Only serve static files in production
+# This only runs during production
+# We need to set an environment variable on Heroku called ENV=production
+# I have no idea what it does, but you include this during deployment
 if ENV == 'production':
     # Serve static files first
     app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="static")

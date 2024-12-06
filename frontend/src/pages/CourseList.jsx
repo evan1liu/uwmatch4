@@ -15,27 +15,38 @@ import { useNavigate } from 'react-router-dom';
 
 function CourseList() {
     const [courses, setCourses] = useState([]);
-    const [loading, setLoading] = useState(true);
+    // initializes as an empty array but will contain a list of course objects if retrieved successfully from the backend
+    const [loading, setLoading] = useState(true); // loading spinner
     const [savedCourses, setSavedCourses] = useState(new Set());
+    // a set is used for saved courses because each item needs to be a unique id
+    // it's easy and fast to check, and easy to add and delete items
     const navigate = useNavigate();
 
+    // whenever the React DOM rerenders, the useEffect will run
+    // it's most likely when the user navigates to this page
     useEffect(() => {
+        // check token again to make sure the user can retrieve data
         const token = localStorage.getItem('token');
         
+        // if the user token is expired, then redirect them to the login page
         if (!token) {
             navigate('/login');
             return;
         }
         
-        const fetchCourses = async () => {
+        // this function will always be called when the user navigates to the courses page
+        const fetchCourses = async () => { // define an async function
             try {
-                // Fetch courses
+                // set an await here because fetching from the backend usually takes some time
+                // from this backend api route, you get an array of course objects
                 const coursesResponse = await fetch(`${API_BASE_URL}/courses`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
+                // convert the response into a JSON object
                 const coursesData = await coursesResponse.json();
+                // using the "setCourses" function to update the courses variable, which is an array of course objects
                 setCourses(coursesData);
 
                 // Fetch saved courses status
@@ -50,6 +61,7 @@ function CourseList() {
                 console.error('Error fetching data:', error);
             } finally {
                 setLoading(false);
+                // after successfully fetching the courses, change the loading boolean into false to stop the spinning
             }
         };
 
@@ -107,7 +119,7 @@ function CourseList() {
                     Courses
                 </Typography>
                 <Grid container spacing={3}>
-                    {courses.map((course) => (
+                    {courses.map((course) => ( 
                         <Grid item xs={12} sm={6} md={4} key={course.id}>
                             <Link to={`/courses/${course.id}`} style={{ textDecoration: 'none' }}>
                                 <Card sx={{ height: '100%', '&:hover': { boxShadow: 6 } }}>

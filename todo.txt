@@ -1,0 +1,2 @@
+Understand the code, comment on every single line to explain what it does.
+Make sure to redirect the user to login when the token is expired.

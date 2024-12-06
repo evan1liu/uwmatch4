@@ -1,16 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'; // React hooks for managing state (variables), when state changes, take certain actions with useEffect
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-    Card,
-    CardContent,
-    Typography,
-    Container,
-    Button,
-    CircularProgress,
+    Card, // define a card
+    CardContent, // define content inside a card
+    Typography, // text styles
+    Container, // for centering content horizontally
+    CircularProgress, // for loading spinner
     Box
 } from '@mui/material';
-import API_BASE_URL from '../api';
-import NavBar from './NavBar';
+import API_BASE_URL from '../api'; // fetches the base URL
+import NavBar from './NavBar'; // same navigation bar for all pages
 
 function CourseDetail() {
     const [course, setCourse] = useState(null);
