@@ -1,2 +1,4 @@
-Understand the code, comment on every single line to explain what it does.
-Make sure to redirect the user to login when the token is expired.
+[ ] Understand the code, comment on every single line to explain what it does.
+[ ] Make sure to redirect the user to login when the token is expired.
+[ ] Only allow wisc.edu emails and then add email verification features
+[ ] Add forgot password feature

@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from backend.models import UserRegister, Token
 from backend.auth import authenticate_user, create_access_token
-from backend.config import settings
+from backend.config import Settings
 from backend.database import user_collection
 from backend.utils import get_hashed_password
 from fastapi.security import OAuth2PasswordRequestForm
@@ -39,7 +39,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             headers={"WWW-Authenticate": "Bearer"}
         )
     
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=Settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )

@@ -3,13 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-from backend.config import settings
+from backend.config import Settings
 from backend.routers import api_router
 from backend.database import course_collection
 
 app = FastAPI()
 
 # Add CORS middleware
+# necessary for frontend to call the backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,7 +23,7 @@ app.add_middleware(
 app.include_router(api_router, prefix="/api")
 
 # If there's no environment variable named ENV, default it to 'development'
-ENV = settings.ENV
+ENV = Settings.ENV
 
 if ENV == 'production':
     # Serve static files first

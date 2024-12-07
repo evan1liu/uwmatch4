@@ -1,0 +1,6 @@
+the directory "backend" contains the code for fastapi
+"frontend" contains the code for react with vite
+"Procfile" tells Heroku how to set up the backend
+package.json in the root directory tells Heroku how to set up the frontend
+requirements.txt is for Python libraries
+runtime.txt specifies the Python version for Heroku

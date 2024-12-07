@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import CourseList from './pages/CourseList';
 import CourseDetail from './pages/CourseDetail';
 import SavedCourses from './pages/SavedCourses';
+import Onboarding from './pages/Onboarding'
 
 function App() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -21,6 +22,10 @@ function App() {
                     <Route 
                         path="/register" 
                         element={<Register />} 
+                    />
+                    <Route 
+                        path="/onboarding" 
+                        element={<Onboarding />} 
                     />
                     <Route 
                         path="/dashboard" 

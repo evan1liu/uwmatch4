@@ -14,13 +14,10 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import API_BASE_URL from '../api';
 
-export default function Register() {
+export default function Onboarding() {
     const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
-        email: '',
-        password: '',
-        confirmPassword: ''
+        year: '',
+        major: ''
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
