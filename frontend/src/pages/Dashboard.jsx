@@ -88,6 +88,8 @@ export default function Dashboard() {
                                 <Typography variant="body1" component="div">
                                     <p><strong>Full Name:</strong> {userData.full_name}</p>
                                     <p><strong>Email:</strong> {userData.email}</p>
+                                    <p><strong>Major:</strong> {userData.major}</p>
+                                    <p><strong>Year:</strong> {userData.year}</p>
                                 </Typography>
                             </CardContent>
                         </Card>

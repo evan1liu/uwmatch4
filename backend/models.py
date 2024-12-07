@@ -2,12 +2,16 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
-# define the pydantic model for user register
-# this is the data that will be sent from the frontend to /api/register endpoint
-class UserRegister(BaseModel):
+# define the pydantic model for user signup
+# this is the data that will be sent from the frontend to /api/signup endpoint
+class UserSignup(BaseModel):
     fullName: str
     email: str
     password: str
+
+class UserOnboarding(BaseModel):
+    major: str
+    year: str 
 
 class Token(BaseModel):
     access_token: str

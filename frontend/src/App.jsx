@@ -1,31 +1,24 @@
 import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Container } from '@mui/material';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import LoginLogic from './pages/LoginLogic';
+import SignupLogic from './pages/SignupLogic';
 import Dashboard from './pages/Dashboard';
 import CourseList from './pages/CourseList';
 import CourseDetail from './pages/CourseDetail';
 import SavedCourses from './pages/SavedCourses';
-import Onboarding from './pages/Onboarding'
 
 function App() {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-
     return (
             <Container>
                 <Routes>
                     <Route 
                         path="/login" 
-                        element={<Login setIsAuthenticated={setIsAuthenticated} />} 
+                        element={<LoginLogic />} 
                     />
                     <Route 
-                        path="/register" 
-                        element={<Register />} 
-                    />
-                    <Route 
-                        path="/onboarding" 
-                        element={<Onboarding />} 
+                        path="/signup" 
+                        element={<SignupLogic />} 
                     />
                     <Route 
                         path="/dashboard" 
