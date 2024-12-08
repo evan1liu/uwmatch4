@@ -15,8 +15,10 @@ export default function LoginForm({ formData, handleChange, handleSubmit, error 
             minHeight: '100vh', 
             display: 'flex', 
             alignItems: 'center', 
-            justifyContent: 'center' 
-        }}>
+            justifyContent: 'center',
+            width: '100%',
+            padding: 3 // Add some padding for mobile
+            }}>
             <Card sx={{ maxWidth: 400, width: '100%' }}>
                 <CardContent>
                     <Typography variant="h5" align="center" gutterBottom>

@@ -1,3 +1,4 @@
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Box, 
@@ -6,7 +7,8 @@ import {
   Typography, 
   Avatar,
   Button,
-  styled
+  useTheme,
+  useMediaQuery
 } from '@mui/material';
 import { 
   Dashboard as DashboardIcon,
@@ -23,7 +25,11 @@ const DRAWER_WIDTH = 240;
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const isLoggedIn = location.pathname !== '/login' && location.pathname !== '/signup';
+
+  if (isMobile) return null; // Hide sidebar on mobile
 
   return (
     <Drawer

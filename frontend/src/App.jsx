@@ -8,14 +8,17 @@ import CourseList from './pages/CourseList';
 import CourseDetail from './pages/CourseDetail';
 import SavedCourses from './pages/SavedCourses';
 import Sidebar from './Components/Sidebar'
-
-const DRAWER_WIDTH = 240;
+import BottomNav from './Components/BottomNav';
+import { useLocation } from 'react-router-dom';
 
 function App() {
+  const location = useLocation();
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
+
   return (
     <Box sx={{ display: 'flex' }}>
-      <Sidebar />
-        {/* Optional: Add a toolbar spacer if you have a top app bar */}
+      {!isAuthPage && <Sidebar />}
+      <Box sx={{ flexGrow: 1, pb: !isAuthPage ? 0 : 7 }}>
         <Routes>
           <Route path="/login" element={<LoginLogic />} />
           <Route path="/signup" element={<SignupLogic />} />
@@ -26,6 +29,8 @@ function App() {
           <Route path="/saved-courses" element={<SavedCourses />} />
         </Routes>
       </Box>
+      {!isAuthPage && <BottomNav />}
+    </Box>
   );
 }
 
