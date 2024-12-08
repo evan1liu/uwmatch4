@@ -20,7 +20,6 @@ function CourseList() {
     const [courses, setCourses] = useState([]);
     const [filteredCourses, setFilteredCourses] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [searchLoading, setSearchLoading] = useState(false);
     const [savedCourses, setSavedCourses] = useState(new Set());
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
@@ -67,14 +66,12 @@ function CourseList() {
         debounce(async (term) => {
             if (!term) {
                 setFilteredCourses(courses);
-                setSearchLoading(false);
+                setLoading(false);
                 return;
             }
-
             try {
                 const token = localStorage.getItem('token');
-                // Get embedding for search term
-                const response = await fetch(`${API_BASE_URL}/get-embedding`, {
+                const response = await fetch(`${API_BASE_URL}/search-courses`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -83,35 +80,14 @@ function CourseList() {
                     body: JSON.stringify({ text: term }),
                 });
                 
-                if (!response.ok) throw new Error('Failed to get embedding');
-                const { embedding } = await response.json();
-
-                // Calculate dot product (since vectors are normalized, dot product = cosine similarity)
-                // Helper function for dot product
-                const dotProduct = (a, b) => {
-                    if (!a || !b || a.length !== b.length) return 0;
-                    let sum = 0;
-                    for (let i = 0; i < a.length; i++) {
-                        sum += a[i] * b[i];
-                    }
-                    return sum;
-                };
-
-                const coursesWithSimilarity = courses
-                    .map(course => ({
-                        ...course,
-                        similarity: dotProduct(embedding, course.embedding)
-                    }))
-                    .sort((a, b) => b.similarity - a.similarity);
-
-                setFilteredCourses(coursesWithSimilarity);
+                if (!response.ok) throw new Error('Failed to search courses');
+                const coursesWithScores = await response.json();
+                setFilteredCourses(coursesWithScores);
             } catch (error) {
                 console.error('Search error:', error);
                 setFilteredCourses(courses);
-            } finally {
-                setSearchLoading(false);
-            }
-        }, 500),
+            } 
+        }, 500), // wait for 0.5 seconds after the last typing to send the search term to the backend
         [courses]
     );
 
@@ -119,7 +95,6 @@ function CourseList() {
     const handleSearchChange = (event) => {
         const term = event.target.value;
         setSearchTerm(term);
-        setSearchLoading(true);
         debouncedSearch(term);
     };
 
