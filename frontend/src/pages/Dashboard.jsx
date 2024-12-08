@@ -10,7 +10,6 @@ import {
     Typography,
     Alert
 } from '@mui/material';
-import NavBar from './NavBar';
 import API_BASE_URL from '../api';
 
 export default function Dashboard() {
@@ -70,7 +69,6 @@ export default function Dashboard() {
     
     return (
         <>
-            <NavBar title="Dashboard" />
             <Container sx={{ mt: 4 }}>
                 {error && (
                     <Alert severity="error" sx={{ mb: 2 }}>

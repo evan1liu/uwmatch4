@@ -11,7 +11,6 @@ import {
     Box
 } from '@mui/material';
 import { debounce } from 'lodash';
-import NavBar from './NavBar';
 import API_BASE_URL from '../api';
 import { useNavigate } from 'react-router-dom';
 import LoadingOverlay from '../Effects/LoadingOverlay';
@@ -138,7 +137,6 @@ function CourseList() {
     return (
         <>
             {loading && <LoadingOverlay />}
-            <NavBar title="Courses" />
             <Container sx={{ mt: 4 }}>
                 <Typography variant="h4" gutterBottom>
                     Courses

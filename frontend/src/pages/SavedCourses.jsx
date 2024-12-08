@@ -13,7 +13,6 @@ import {
     DialogContent,
     DialogActions
 } from '@mui/material';
-import NavBar from './NavBar';
 import API_BASE_URL from '../api';
 import LoadingOverlay from '../Effects/LoadingOverlay';
 
@@ -109,7 +108,6 @@ function SavedCourses() {
     return (
         <>
             {loading && <LoadingOverlay />}
-            <NavBar title="Saved Courses" />
             <Container sx={{ mt: 4 }}>
                 <Typography variant="h4" gutterBottom>
                     Saved Courses

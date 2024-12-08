@@ -9,7 +9,6 @@ import {
     Box
 } from '@mui/material';
 import API_BASE_URL from '../api'; // fetches the base URL
-import NavBar from './NavBar'; // same navigation bar for all pages
 import LoadingOverlay from '../Effects/LoadingOverlay';
 
 function CourseDetail() {
@@ -56,7 +55,6 @@ function CourseDetail() {
     return (
         <>
             {loading && <LoadingOverlay />}
-            <NavBar title={course.title} />
             <Card>
                 <CardContent>
                     <Typography variant="h4" gutterBottom>
