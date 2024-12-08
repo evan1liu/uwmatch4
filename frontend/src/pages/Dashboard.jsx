@@ -54,4 +54,60 @@ export default function Dashboard() {
     }, [navigate]);
     // when the navigate state changes, the function in the useEffect will run
     // when the user comes to the dashboard page from login, the navigate function is used, so this useEffect is called
+    
+    if (!userData) {
+        return (
+            <Container sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '100vh' 
+            }}>
+                <CircularProgress />
+            </Container>
+        );
+    }
+    
+    return (
+        <>
+            <NavBar title="Dashboard" />
+            <Container sx={{ mt: 4 }}>
+                {error && (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                        {error}
+                    </Alert>
+                )}
+                
+                <Grid container spacing={3}>
+                    <Grid item xs={12} md={6}>
+                        <Card>
+                            <CardContent>
+                                <Typography variant="h6" gutterBottom>
+                                    Profile Information
+                                </Typography>
+                                <Typography variant="body1" component="div">
+                                    <p><strong>Full Name:</strong> {userData.full_name}</p>
+                                    <p><strong>Email:</strong> {userData.email}</p>
+                                    <p><strong>Major:</strong> {userData.major}</p>
+                                    <p><strong>Year:</strong> {userData.year}</p>
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                        <Card>
+                            <CardContent>
+                                <Typography variant="h6" gutterBottom>
+                                    Statistics
+                                </Typography>
+                                <Typography variant="body1">
+                                    Add your dashboard statistics here.
+                                </Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                </Grid>
+            </Container>
+        </>
+    );
 }
