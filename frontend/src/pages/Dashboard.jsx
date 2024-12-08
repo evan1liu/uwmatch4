@@ -54,3 +54,4 @@ export default function Dashboard() {
     }, [navigate]);
     // when the navigate state changes, the function in the useEffect will run
     // when the user comes to the dashboard page from login, the navigate function is used, so this useEffect is called
+}
