@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import API_BASE_URL from '../api'; // fetches the base URL
 import NavBar from './NavBar'; // same navigation bar for all pages
+import LoadingOverlay from '../Effects/LoadingOverlay';
 
 function CourseDetail() {
     const [course, setCourse] = useState(null);
@@ -47,16 +48,14 @@ function CourseDetail() {
         fetchCourse();
     }, [id]);
 
-    if (loading) {
-        return <CircularProgress />;
-    }
 
     if (!course) {
         return <Typography>Course not found</Typography>;
     }
 
     return (
-        <Container>
+        <>
+            {loading && <LoadingOverlay />}
             <NavBar title={course.title} />
             <Card>
                 <CardContent>
@@ -88,7 +87,7 @@ function CourseDetail() {
                     </Box>
                 </CardContent>
             </Card>
-        </Container>
+        </>
     );
 }
 

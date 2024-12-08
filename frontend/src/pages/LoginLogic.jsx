@@ -5,6 +5,7 @@ import API_BASE_URL from '../api';
 import LoginForm from './Forms/LoginForm';
 
 export default function LoginLogic() {
+    // this is a React state object for storing the login data in JavaScript object
     const [formData, setFormData] = useState({
         username: '',
         password: ''
@@ -14,6 +15,7 @@ export default function LoginLogic() {
   
     const handleSubmit = async (e) => {
         e.preventDefault();
+        // this specific format of sending login data to the backend is required by FastAPI's OAuth2PasswordRequestForm
         const loginData = new FormData();
         loginData.append('username', formData.username);
         loginData.append('password', formData.password);

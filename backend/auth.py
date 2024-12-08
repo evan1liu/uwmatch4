@@ -9,6 +9,8 @@ from backend.database import user_collection
 from backend.models import Token, TokenData, UserInDB
 from backend.utils import verify_password
 
+# this OAuth2PasswordBearer is a FastAPI security utility
+# the parameter that is passed in specifies the endpoint where the user can obtain a token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/token")
 
 async def get_user(email: str) -> Optional[UserInDB]:

@@ -1,1 +1,0 @@
-Frontend using React is in the frontend folder. Backend uses FastAPI and is in the root directory.

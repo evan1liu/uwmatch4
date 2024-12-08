@@ -32,6 +32,7 @@ async def singup_user(user_data: UserSignup):
     await user_collection.insert_one(db_user)
     return {"message": "User created successfully"}
 
+# the backend root for dealing with the response to the follow up questions for a user during register
 @router.post("/onboarding")
 async def onboarding_user(user_data: UserOnboarding, current_user: UserInDB = Depends(get_current_active_user)):
     
@@ -46,7 +47,9 @@ async def onboarding_user(user_data: UserOnboarding, current_user: UserInDB = De
     )
     return {"message": "User updated successfully"}
 
+# this response_model=Token is a Pydantic model that defines the datatype of this token, which inclues the actual token string and the token type 
 @router.post("/token", response_model=Token)
+# OAuth2PasswordRequestForm is a data validation schema
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = await authenticate_user(form_data.username, form_data.password)
     if not user:

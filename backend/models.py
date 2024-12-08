@@ -9,6 +9,9 @@ class UserSignup(BaseModel):
     email: str
     password: str
 
+class SearchInput(BaseModel):
+    text: str
+
 class UserOnboarding(BaseModel):
     major: str
     year: str 

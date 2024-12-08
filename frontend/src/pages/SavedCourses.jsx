@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import NavBar from './NavBar';
 import API_BASE_URL from '../api';
+import LoadingOverlay from '../Effects/LoadingOverlay';
 
 function SavedCourses() {
     const [courses, setCourses] = useState([]);
@@ -25,6 +26,7 @@ function SavedCourses() {
     const navigate = useNavigate();
 
     const fetchSavedCourses = async () => {
+        // fetch token from the browser's localStorage (Google Chrome: Application > Local Storage)
         const token = localStorage.getItem('token');
         if (!token) {
             navigate('/login');
@@ -33,20 +35,29 @@ function SavedCourses() {
 
         try {
             const response = await fetch(`${API_BASE_URL}/saved-courses`, {
+            // after the user is logged in, whenever he/she wants to access user data, we need to sent this headers in this exact format
+            // you cannot change this format, it's defined by the OAuth 2.0 specification (RFC 6750)
+            // also, this is a javascript object with the key called "headers" and with the value being another object
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
+            // set a constant called "data" that is the object returned from the backend
+            // this data is a list of course objects with simplified information
             const data = await response.json();
+            // set the react state object courses as "data" (containing course objects)
             setCourses(data);
+            // create a new list with just string ids of courses, not objects!
             setSavedCourses(new Set(data.map(course => course.id)));
         } catch (error) {
             console.error('Error fetching saved courses:', error);
         } finally {
+            // when done, setLoading(false) and stops the loading animation
             setLoading(false);
         }
     };
 
+    // when the user lands on this page, it triggers use effect and triggers the function fetchSavedCourses()
     useEffect(() => {
         const token = localStorage.getItem('token');
         
@@ -58,7 +69,8 @@ function SavedCourses() {
         fetchSavedCourses();
     }, []);
 
-    const handleSaveCourse = async (courseId) => {
+
+    const unsaveCourse = async (courseId) => {
         const token = localStorage.getItem('token');
         if (!token) {
             navigate('/login');
@@ -77,7 +89,7 @@ function SavedCourses() {
             if (!response.ok) {
                 throw new Error('Failed to update course save status');
             }
-
+            // close the confirm unsave course dialogue
             setOpenDialog(false);
             // Reload the courses after unsaving
             fetchSavedCourses();
@@ -93,12 +105,10 @@ function SavedCourses() {
         setOpenDialog(true);
     };
 
-    if (loading) {
-        return <CircularProgress />;
-    }
 
     return (
         <>
+            {loading && <LoadingOverlay />}
             <NavBar title="Saved Courses" />
             <Container sx={{ mt: 4 }}>
                 <Typography variant="h4" gutterBottom>
@@ -131,7 +141,7 @@ function SavedCourses() {
                             </Link>
                         </Grid>
                     ))}
-                    {courses.length === 0 && (
+                    {!loading && courses.length === 0 && (
                         <Grid item xs={12}>
                             <Typography variant="h6" color="text.secondary" align="center">
                                 No saved courses yet
@@ -169,7 +179,8 @@ function SavedCourses() {
                         Cancel
                     </Button>
                     <Button 
-                        onClick={() => handleSaveCourse(selectedCourse?.id)} 
+                        // this onClick triggers the function unsaveCourse
+                        onClick={() => unsaveCourse(selectedCourse?.id)} 
                         color="error"
                         variant="contained"
                         autoFocus

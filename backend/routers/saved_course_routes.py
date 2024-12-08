@@ -6,6 +6,7 @@ from typing import List
 from backend.database import saved_course_collection, course_collection
 from backend.models import SavedCourse
 from backend.auth import get_current_active_user, UserInDB
+from backend.models import SearchInput
 
 router = APIRouter()
 
@@ -49,5 +50,21 @@ async def get_saved_courses(current_user: UserInDB = Depends(get_current_active_
     return [{
         "id": str(course["_id"]),
         "title": course.get("title", "No title"),
-        "credits": course.get("credits", 0)
+        "credits": course.get("credits", 0),
+        "embedding": course.get("title_embedding"),
     } for course in courses] 
+
+import os
+from openai import OpenAI
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+
+@router.post("/get-embedding")
+async def get_embedding(search_input: SearchInput):
+    try:
+        response = client.embeddings.create(
+            input=search_input.text,
+            model="text-embedding-3-small"
+        )
+        return {"embedding": response.data[0].embedding}  # Return as JSON object
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

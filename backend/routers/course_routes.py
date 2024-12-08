@@ -11,7 +11,8 @@ async def get_courses():
     return [{
         "id": str(course["_id"]),
         "title": course.get("title"),
-        "credits": course.get("credits")
+        "credits": course.get("credits"),
+        "embedding": course.get("title_embedding"),
     } for course in courses]
 
 @router.get("/courses/{course_id}")

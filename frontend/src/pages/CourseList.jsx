@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { 
     Card, 
@@ -6,50 +6,45 @@ import {
     Typography, 
     Grid, 
     Container,
-    CircularProgress,
-    Button
+    Button,
+    TextField,
+    Box
 } from '@mui/material';
+import { debounce } from 'lodash';
 import NavBar from './NavBar';
 import API_BASE_URL from '../api';
 import { useNavigate } from 'react-router-dom';
+import LoadingOverlay from '../Effects/LoadingOverlay';
 
 function CourseList() {
     const [courses, setCourses] = useState([]);
-    // initializes as an empty array but will contain a list of course objects if retrieved successfully from the backend
-    const [loading, setLoading] = useState(true); // loading spinner
+    const [filteredCourses, setFilteredCourses] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchLoading, setSearchLoading] = useState(false);
     const [savedCourses, setSavedCourses] = useState(new Set());
-    // a set is used for saved courses because each item needs to be a unique id
-    // it's easy and fast to check, and easy to add and delete items
+    const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
 
-    // whenever the React DOM rerenders, the useEffect will run
-    // it's most likely when the user navigates to this page
+    // Fetch initial courses data
     useEffect(() => {
-        // check token again to make sure the user can retrieve data
         const token = localStorage.getItem('token');
-        
-        // if the user token is expired, then redirect them to the login page
         if (!token) {
             navigate('/login');
             return;
         }
         
-        // this function will always be called when the user navigates to the courses page
-        const fetchCourses = async () => { // define an async function
+        const fetchCourses = async () => {
             try {
-                // set an await here because fetching from the backend usually takes some time
-                // from this backend api route, you get an array of course objects
                 const coursesResponse = await fetch(`${API_BASE_URL}/courses`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
-                // convert the response into a JSON object
                 const coursesData = await coursesResponse.json();
-                // using the "setCourses" function to update the courses variable, which is an array of course objects
+                console.log('Sample course data:', coursesData[0]);
                 setCourses(coursesData);
+                setFilteredCourses(coursesData); // Initially show all courses
 
-                // Fetch saved courses status
                 const savedResponse = await fetch(`${API_BASE_URL}/saved-courses`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -61,15 +56,74 @@ function CourseList() {
                 console.error('Error fetching data:', error);
             } finally {
                 setLoading(false);
-                // after successfully fetching the courses, change the loading boolean into false to stop the spinning
             }
         };
 
         fetchCourses();
     }, []);
 
+    // Debounced search function
+    const debouncedSearch = useCallback(
+        debounce(async (term) => {
+            if (!term) {
+                setFilteredCourses(courses);
+                setSearchLoading(false);
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('token');
+                // Get embedding for search term
+                const response = await fetch(`${API_BASE_URL}/get-embedding`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: term }),
+                });
+                
+                if (!response.ok) throw new Error('Failed to get embedding');
+                const { embedding } = await response.json();
+
+                // Calculate dot product (since vectors are normalized, dot product = cosine similarity)
+                // Helper function for dot product
+                const dotProduct = (a, b) => {
+                    if (!a || !b || a.length !== b.length) return 0;
+                    let sum = 0;
+                    for (let i = 0; i < a.length; i++) {
+                        sum += a[i] * b[i];
+                    }
+                    return sum;
+                };
+
+                const coursesWithSimilarity = courses
+                    .map(course => ({
+                        ...course,
+                        similarity: dotProduct(embedding, course.embedding)
+                    }))
+                    .sort((a, b) => b.similarity - a.similarity);
+
+                setFilteredCourses(coursesWithSimilarity);
+            } catch (error) {
+                console.error('Search error:', error);
+                setFilteredCourses(courses);
+            } finally {
+                setSearchLoading(false);
+            }
+        }, 500),
+        [courses]
+    );
+
+    // Handle search input
+    const handleSearchChange = (event) => {
+        const term = event.target.value;
+        setSearchTerm(term);
+        setSearchLoading(true);
+        debouncedSearch(term);
+    };
+
     const handleSaveCourse = async (e, courseId) => {
-        // Prevent the click from bubbling up to the card link
         e.preventDefault();
         e.stopPropagation();
 
@@ -92,7 +146,6 @@ function CourseList() {
                 throw new Error('Failed to update course save status');
             }
 
-            // Toggle the saved status
             setSavedCourses(prev => {
                 const newSet = new Set(prev);
                 if (newSet.has(courseId)) {
@@ -107,19 +160,29 @@ function CourseList() {
         }
     };
 
-    if (loading) {
-        return <CircularProgress />;
-    }
-
     return (
         <>
+            {loading && <LoadingOverlay />}
             <NavBar title="Courses" />
             <Container sx={{ mt: 4 }}>
                 <Typography variant="h4" gutterBottom>
                     Courses
                 </Typography>
+                
+                {/* Search Input */}
+                <Box sx={{ mb: 3 }}>
+                    <TextField
+                        fullWidth
+                        label="Search Courses"
+                        variant="outlined"
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        disabled={loading}
+                    />
+                </Box>
+
                 <Grid container spacing={3}>
-                    {courses.map((course) => ( 
+                    {filteredCourses.map((course) => ( 
                         <Grid item xs={12} sm={6} md={4} key={course.id}>
                             <Link to={`/courses/${course.id}`} style={{ textDecoration: 'none' }}>
                                 <Card sx={{ height: '100%', '&:hover': { boxShadow: 6 } }}>
@@ -130,6 +193,11 @@ function CourseList() {
                                         <Typography color="text.secondary">
                                             Credits: {course.credits}
                                         </Typography>
+                                        {searchTerm && course.similarity !== undefined && (
+                                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                                Relevance: {(course.similarity * 100).toFixed(1)}%
+                                            </Typography>
+                                        )}
                                         <Button 
                                             onClick={(e) => handleSaveCourse(e, course.id)}
                                             variant="contained"
