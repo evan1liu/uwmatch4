@@ -11,10 +11,13 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
-    DialogActions
+    DialogActions,
+    Box
 } from '@mui/material';
 import API_BASE_URL from '../api';
 import LoadingOverlay from '../Effects/LoadingOverlay';
+import ConfirmUnsave from '../PopoutWindows/ConfirmUnsave';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
 
 function SavedCourses() {
     const [courses, setCourses] = useState([]);
@@ -108,7 +111,7 @@ function SavedCourses() {
     return (
         <>
             {loading && <LoadingOverlay />}
-            <Container sx={{ mt: 4 }}>
+            <Container sx={{ mt: 4, pb: 8 }}>
                 <Typography variant="h4" gutterBottom>
                     Saved Courses
                 </Typography>
@@ -124,15 +127,15 @@ function SavedCourses() {
                                         <Typography color="text.secondary">
                                             Credits: {course.credits}
                                         </Typography>
-                                        <Button 
-                                            onClick={(e) => handleUnsaveClick(e, course)}
-                                            variant="contained"
-                                            color="success"
-                                            size="small"
-                                            sx={{ mt: 2 }}
-                                        >
-                                            Saved
-                                        </Button>
+                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                            <Button 
+                                                onClick={(e) => handleUnsaveClick(e, course)}
+                                                color="primary"
+                                                sx={{ minWidth: 'auto' }}
+                                            >
+                                                <BookmarkIcon />
+                                            </Button>
+                                        </Box>
 
                                     </CardContent>
                                 </Card>
@@ -149,44 +152,12 @@ function SavedCourses() {
                 </Grid>
             </Container>
 
-            <Dialog
-                open={openDialog}
+            <ConfirmUnsave
+                openDialog={openDialog}
                 onClose={() => setOpenDialog(false)}
-                aria-labelledby="unsave-dialog-title"
-            >
-                <DialogTitle id="unsave-dialog-title">
-                    Confirm Unsave
-                </DialogTitle>
-                <DialogContent>
-                    <Typography>
-                        Are you sure you want to unsave this course?
-                    </Typography>
-                    <Typography 
-                        variant="subtitle1" 
-                        sx={{ mt: 2, fontWeight: 'bold' }}
-                    >
-                        {selectedCourse?.title}
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button 
-                        onClick={() => setOpenDialog(false)} 
-                        color="primary"
-                        variant="outlined"
-                    >
-                        Cancel
-                    </Button>
-                    <Button 
-                        // this onClick triggers the function unsaveCourse
-                        onClick={() => unsaveCourse(selectedCourse?.id)} 
-                        color="error"
-                        variant="contained"
-                        autoFocus
-                    >
-                        Unsave
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                onConfirm={() => unsaveCourse(selectedCourse?.id)}
+                courseTitle={selectedCourse?.title}
+            />
         </>
     );
 }

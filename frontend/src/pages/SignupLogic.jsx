@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import API_BASE_URL from '../api';
 
-import SignupForm from './Forms/SignupForm';
-import OnboardingForm from './Forms/OnboardingForm';
+import SignupForm from '../Forms/SignupForm';
+import OnboardingForm from '../Forms/OnboardingForm';
 import LoadingOverlay from '../Effects/LoadingOverlay';
 
 import { majors, years } from '../Data/MajorsAndYears';
@@ -92,7 +92,7 @@ export default function SignupLogic() {
                 },
             });
 
-            navigate('/dashboard');
+            navigate('/profile');
         } catch (err) {
             setError('Failed to save additional information.');
             console.error('Onboarding error:', err);

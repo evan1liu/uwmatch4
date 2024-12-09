@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { 
     Card, 
@@ -8,93 +8,121 @@ import {
     Container,
     Button,
     TextField,
-    Box
+    Box,
+    CircularProgress
 } from '@mui/material';
-import { debounce } from 'lodash';
 import API_BASE_URL from '../api';
 import { useNavigate } from 'react-router-dom';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
 import LoadingOverlay from '../Effects/LoadingOverlay';
 
 function CourseList() {
     const [courses, setCourses] = useState([]);
     const [filteredCourses, setFilteredCourses] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [savedCourses, setSavedCourses] = useState(new Set());
     const [searchTerm, setSearchTerm] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
+    const observer = useRef();
     const navigate = useNavigate();
 
-    // Fetch initial courses data
-    useEffect(() => {
+    // Last element callback for intersection observer
+    const lastCourseElementRef = useCallback(node => {
+        if (isLoading) return;
+        if (observer.current) observer.current.disconnect();
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                setPage(prevPage => prevPage + 1);
+            }
+        }, { rootMargin: '100px' });
+        if (node) observer.current.observe(node);
+    }, [isLoading, hasMore]);
+
+    // Modified fetch courses function
+    const fetchCourses = async (pageNum) => {
         const token = localStorage.getItem('token');
         if (!token) {
             navigate('/login');
             return;
         }
-        
-        const fetchCourses = async () => {
-            try {
-                const coursesResponse = await fetch(`${API_BASE_URL}/courses`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                const coursesData = await coursesResponse.json();
-                console.log('Sample course data:', coursesData[0]);
-                setCourses(coursesData);
-                setFilteredCourses(coursesData); // Initially show all courses
 
-                const savedResponse = await fetch(`${API_BASE_URL}/saved-courses`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                const savedData = await savedResponse.json();
-                setSavedCourses(new Set(savedData.map(course => course.id)));
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            } finally {
-                setLoading(false);
+        setIsLoading(true);
+        try {
+            const coursesResponse = await fetch(`${API_BASE_URL}/courses?page=${pageNum}&limit=18`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await coursesResponse.json();
+            
+            if (pageNum === 1) {
+                setCourses(data.courses);
+                setFilteredCourses(data.courses);
+            } else {
+                setCourses(prev => [...prev, ...data.courses]);
+                setFilteredCourses(prev => [...prev, ...data.courses]);
             }
-        };
+            setHasMore(data.has_more);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-        fetchCourses();
+    // Initial load
+    useEffect(() => {
+        fetchCourses(1);
     }, []);
 
-    // Debounced search function
-    const debouncedSearch = useCallback(
-        debounce(async (term) => {
-            if (!term) {
-                setFilteredCourses(courses);
-                setLoading(false);
-                return;
-            }
-            try {
-                const token = localStorage.getItem('token');
-                const response = await fetch(`${API_BASE_URL}/search-courses`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ text: term }),
-                });
-                
-                if (!response.ok) throw new Error('Failed to search courses');
-                const coursesWithScores = await response.json();
-                setFilteredCourses(coursesWithScores);
-            } catch (error) {
-                console.error('Search error:', error);
-                setFilteredCourses(courses);
-            } 
-        }, 500), // wait for 0.5 seconds after the last typing to send the search term to the backend
-        [courses]
-    );
+    // Load more when page changes
+    useEffect(() => {
+        if (page > 1) {
+            fetchCourses(page);
+        }
+    }, [page]);
 
-    // Handle search input
-    const handleSearchChange = (event) => {
-        const term = event.target.value;
-        setSearchTerm(term);
-        debouncedSearch(term);
+    // Handle search
+    const handleSearch = async (term) => {
+        if (!term) {
+            setFilteredCourses(courses);
+            setHasMore(true);  // Reset hasMore for normal pagination
+            return;
+        }
+        
+        setIsSearching(true);
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/search-courses`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: term })
+            });
+            
+            if (!response.ok) throw new Error('Failed to search courses');
+            const coursesWithScores = await response.json();
+            setFilteredCourses(coursesWithScores);
+            setHasMore(false);  // Disable infinite scroll for search results
+        } catch (error) {
+            console.error('Search error:', error);
+            setFilteredCourses(courses);
+        } finally {
+            setTimeout(() => {
+                setIsSearching(false);
+            }, 300);
+        }
+    };
+
+    const handleKeyPress = (event) => {
+        if (event.key === 'Enter') {
+            handleSearch(searchTerm);
+        }
     };
 
     const handleSaveCourse = async (e, courseId) => {
@@ -135,59 +163,86 @@ function CourseList() {
     };
 
     return (
-        <>
-            {loading && <LoadingOverlay />}
-            <Container sx={{ mt: 4 }}>
-                <Typography variant="h4" gutterBottom>
-                    Courses
-                </Typography>
-                
-                {/* Search Input */}
-                <Box sx={{ mb: 3 }}>
-                    <TextField
-                        fullWidth
-                        label="Search Courses"
-                        variant="outlined"
-                        value={searchTerm}
-                        onChange={handleSearchChange}
-                        disabled={loading}
-                    />
-                </Box>
+        <Container sx={{ mt: 4, pb: 8 }}>
+            {/* Search Input with combined loading effects */}
+            <Box sx={{ mb: 3 }}>
+                <TextField
+                    fullWidth
+                    label="Search Courses"
+                    variant="outlined"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    sx={{
+                        '& .MuiOutlinedInput-root': {
+                            '& fieldset': {
+                                borderColor: isSearching ? 'primary.main' : 'inherit',
+                                borderWidth: isSearching ? '2px' : '1px',
+                                transition: 'all 0.2s ease-in-out'
+                            },
+                            backgroundColor: isSearching ? 'rgba(230, 243, 255, 0.8)' : 'inherit',
+                            transition: 'background-color 0.2s ease-in-out'
+                        },
+                        '& .MuiInputLabel-root': {
+                            color: isSearching ? 'primary.main' : 'inherit',
+                            transition: 'color 0.2s ease-in-out'
+                        }
+                    }}
+                />
+            </Box>
 
-                <Grid container spacing={3}>
-                    {filteredCourses.map((course) => ( 
-                        <Grid item xs={12} sm={6} md={4} key={course.id}>
-                            <Link to={`/courses/${course.id}`} style={{ textDecoration: 'none' }}>
-                                <Card sx={{ height: '100%', '&:hover': { boxShadow: 6 } }}>
-                                    <CardContent>
-                                        <Typography variant="h6" component="div">
-                                            {course.title}
+            {isSearching && <LoadingOverlay />}
+
+            <Grid container spacing={3}>
+                {filteredCourses.map((course, index) => ( 
+                    <Grid 
+                        item 
+                        xs={12} 
+                        sm={12} 
+                        md={6} 
+                        lg={4} 
+                        key={course.id}
+                        ref={index === filteredCourses.length - 1 ? lastCourseElementRef : null}
+                    >
+                        <Link to={`/courses/${course.id}`} style={{ textDecoration: 'none' }}>
+                            <Card sx={{ height: '100%', '&:hover': { boxShadow: 6 } }}>
+                                <CardContent>
+                                    <Typography variant="h6" component="div">
+                                        {course.title}
+                                    </Typography>
+                                    <Typography color="text.secondary">
+                                        Credits: {course.credits}
+                                    </Typography>
+                                    {searchTerm && course.similarity !== undefined && (
+                                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                            Relevance: {(course.similarity * 100).toFixed(1)}%
                                         </Typography>
-                                        <Typography color="text.secondary">
-                                            Credits: {course.credits}
-                                        </Typography>
-                                        {searchTerm && course.similarity !== undefined && (
-                                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                                                Relevance: {(course.similarity * 100).toFixed(1)}%
-                                            </Typography>
-                                        )}
+                                    )}
+                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                                         <Button 
                                             onClick={(e) => handleSaveCourse(e, course.id)}
-                                            variant="contained"
-                                            color={savedCourses.has(course.id) ? "success" : "primary"}
-                                            size="small"
-                                            sx={{ mt: 2 }}
+                                            color={savedCourses.has(course.id) ? "primary" : "inherit"}
+                                            sx={{ minWidth: 'auto' }}
                                         >
-                                            {savedCourses.has(course.id) ? "Saved" : "Save Course"}
+                                            {savedCourses.has(course.id) 
+                                                ? <BookmarkIcon /> 
+                                                : <BookmarkBorderIcon />
+                                            }
                                         </Button>
-                                    </CardContent>
-                                </Card>
-                            </Link>
-                        </Grid>
-                    ))}
-                </Grid>
-            </Container>
-        </>
+                                    </Box>
+                                </CardContent>
+                            </Card>
+                        </Link>
+                    </Grid>
+                ))}
+            </Grid>
+            
+            {isLoading && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                    <CircularProgress />
+                </Box>
+            )}
+        </Container>
     );
 }
 

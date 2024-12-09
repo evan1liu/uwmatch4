@@ -3,10 +3,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Container, Box } from '@mui/material';
 import LoginLogic from './pages/LoginLogic';
 import SignupLogic from './pages/SignupLogic';
-import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
 import CourseList from './pages/CourseList';
 import CourseDetail from './pages/CourseDetail';
 import SavedCourses from './pages/SavedCourses';
+import Roadmap from './pages/Roadmap';
 import Sidebar from './Components/Sidebar'
 import BottomNav from './Components/BottomNav';
 import { useLocation } from 'react-router-dom';
@@ -22,11 +23,12 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginLogic />} />
           <Route path="/signup" element={<SignupLogic />} />
-          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/courses" element={<CourseList />} />
           <Route path="/courses/:id" element={<CourseDetail />} />
           <Route path="/saved-courses" element={<SavedCourses />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/roadmap" element={<Roadmap />} />
         </Routes>
       </Box>
       {!isAuthPage && <BottomNav />}

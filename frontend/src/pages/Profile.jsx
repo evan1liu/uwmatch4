@@ -8,14 +8,22 @@ import {
     Grid,
     CircularProgress,
     Typography,
-    Alert
+    Alert,
+    Box,
+    Button
 } from '@mui/material';
 import API_BASE_URL from '../api';
+import { 
+    Logout as LogoutIcon,
+  } from '@mui/icons-material';
+import ConfirmLogout from '../PopoutWIndows/ConfirmLogout'
+  
 
-export default function Dashboard() {
+export default function Profile() {
     const [userData, setUserData] = useState(null);
-    const [error, setError] = useState(''); // this is a string variable to display any error messages from Dashboard.jsx
+    const [error, setError] = useState(''); // this is a string variable to display any error messages from Profile.jsx
     const navigate = useNavigate(); // this is a built-in react hook to navigate to different pages
+    const [openDialog, setOpenDialog] = useState(false);
 
     useEffect(() => { // within the curly braces is the function that will be called when the navigate state changes
         const token = localStorage.getItem('token');
@@ -52,7 +60,7 @@ export default function Dashboard() {
         fetchUserData();
     }, [navigate]);
     // when the navigate state changes, the function in the useEffect will run
-    // when the user comes to the dashboard page from login, the navigate function is used, so this useEffect is called
+    // when the user comes to the profile page from login, the navigate function is used, so this useEffect is called
     
     if (!userData) {
         return (
@@ -66,6 +74,18 @@ export default function Dashboard() {
             </Container>
         );
     }
+
+    const handleLogout = () => {
+        setOpenDialog(false);
+        localStorage.removeItem('token');
+        navigate('/login');
+      };    
+
+    const handleLogoutClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setOpenDialog(true);
+      };    
     
     return (
         <>
@@ -93,19 +113,23 @@ export default function Dashboard() {
                         </Card>
                     </Grid>
                     <Grid item xs={12} md={6}>
-                        <Card>
-                            <CardContent>
-                                <Typography variant="h6" gutterBottom>
-                                    Statistics
-                                </Typography>
-                                <Typography variant="body1">
-                                    Add your dashboard statistics here.
-                                </Typography>
-                            </CardContent>
-                        </Card>
+                        <Box sx={{ mt: 'auto', p: 2 }}>
+                            <Button fullWidth
+                                    startIcon={<LogoutIcon />}
+                                    onClick={handleLogoutClick}
+                                    color="inherit"
+                            > 
+                            Logout
+                            </Button>
+                        </Box>
                     </Grid>
                 </Grid>
             </Container>
+            <ConfirmLogout
+                openDialog={openDialog}
+                handleLogout={handleLogout}
+                onClose={() => setOpenDialog(false)}
+            />
         </>
     );
 }

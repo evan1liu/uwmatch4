@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import API_BASE_URL from '../api';
-import LoginForm from './Forms/LoginForm';
+import LoginForm from '../Forms/LoginForm';
 
 export default function LoginLogic() {
     // this is a React state object for storing the login data in JavaScript object
@@ -27,7 +27,7 @@ export default function LoginLogic() {
                 },
             });
             localStorage.setItem('token', response.data.access_token);
-            navigate('/dashboard');
+            navigate('/profile');
         } catch (err) {
             console.error('Login error:', err);
             setError(`Invalid username or password
