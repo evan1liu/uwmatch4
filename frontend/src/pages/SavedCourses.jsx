@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import API_BASE_URL from '../api';
 import LoadingOverlay from '../Effects/LoadingOverlay';
-import ConfirmUnsave from '../PopoutWindows/ConfirmUnsave';
+import ConfirmUnsave from '../PopoutWIndows/ConfirmUnsave';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 
 function SavedCourses() {
