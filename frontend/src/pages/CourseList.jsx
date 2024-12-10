@@ -168,7 +168,7 @@ function CourseList() {
             <Box sx={{ mb: 3 }}>
                 <TextField
                     fullWidth
-                    label="Search Courses"
+                    label="Search Courses (Course Code or Keywords)"
                     variant="outlined"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}

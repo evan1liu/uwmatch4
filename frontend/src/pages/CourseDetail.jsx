@@ -69,7 +69,15 @@ function CourseDetail() {
                     </Box>
                     <Box sx={{ mt: 2 }}>
                         <Typography variant="h6">Course Designation</Typography>
-                        <Typography paragraph>{course.course_designation}</Typography>
+                        <Typography 
+                            variant="body1" 
+                            sx={{ 
+                                whiteSpace: 'pre-line',
+                                mb: 2 
+                            }}
+                        >
+                            {course.designation}
+                        </Typography>
                     </Box>
                     <Box sx={{ mt: 2 }}>
                         <Typography variant="h6">Last Taught</Typography>
@@ -77,7 +85,15 @@ function CourseDetail() {
                     </Box>
                     <Box sx={{ mt: 2 }}>
                         <Typography variant="h6">Learning Outcomes</Typography>
-                        <Typography paragraph>{course.learning_outcomes}</Typography>
+                        <Typography 
+                            variant="body1" 
+                            sx={{ 
+                                whiteSpace: 'pre-line',  // This preserves line breaks
+                                mb: 2 
+                            }}
+                        >
+                            {course.learning_outcomes}
+                        </Typography>
                     </Box>
                     <Box sx={{ mt: 2 }}>
                         <Typography variant="h6">Prerequisites</Typography>

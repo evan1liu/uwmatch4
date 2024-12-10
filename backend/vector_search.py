@@ -3,6 +3,7 @@ import faiss
 import numpy as np
 from typing import List, Dict
 from bson import ObjectId
+import logging
 
 class VectorSearchManager:
     def __init__(self):
@@ -12,13 +13,18 @@ class VectorSearchManager:
         self.last_update = None
         
     async def build_index(self, course_collection) -> None:
+        logging.info("Starting to build vector search index...")
+        
         courses = await course_collection.find(
             {"title_embedding": {"$exists": True}},
             {"_id": 1, "title_embedding": 1}
         ).to_list(length=None)
         
         if not courses:
+            logging.warning("No courses found with embeddings")
             return
+            
+        logging.info(f"Found {len(courses)} courses with embeddings")
             
         # Extract embeddings and IDs
         embeddings = []
@@ -30,17 +36,20 @@ class VectorSearchManager:
                 self.course_ids.append(str(course['_id']))
         
         if not embeddings:
+            logging.warning("No valid embeddings found")
             return
+            
+        logging.info(f"Building index with {len(embeddings)} embeddings")
             
         # Convert to numpy array
         embeddings_array = np.array(embeddings, dtype=np.float32)
         
         # Build FAISS index
         self.index = faiss.IndexFlatIP(self.dimension)
-        faiss.normalize_L2(embeddings_array)
         self.index.add(embeddings_array)
         
         self.last_update = datetime.now()
+        logging.info("Vector search index built successfully")
 
     async def search(self, query_vector: List[float], k: int = 10) -> List[Dict]:
         if not self.index:
@@ -48,7 +57,6 @@ class VectorSearchManager:
             
         # Prepare query vector
         query_array = np.array([query_vector], dtype=np.float32)
-        faiss.normalize_L2(query_array)
         
         # Search
         D, I = self.index.search(query_array, k)
