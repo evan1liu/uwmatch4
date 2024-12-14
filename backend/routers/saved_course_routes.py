@@ -3,10 +3,10 @@ from bson import ObjectId
 from datetime import datetime
 from typing import List
 
-from backend.database import saved_course_collection, course_collection
-from backend.models import SavedCourse
-from backend.auth import get_current_active_user, UserInDB
-from backend.models import SearchInput
+from ..database import saved_course_collection, course_collection
+from ..models.search import SearchInput
+from ..models.user import UserInDB
+from ..auth import get_current_active_user
 
 router = APIRouter()
 

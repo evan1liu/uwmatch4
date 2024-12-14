@@ -1,16 +1,11 @@
 from pydantic import BaseModel
-from datetime import datetime
 from typing import Optional
+from datetime import datetime
 
-# define the pydantic model for user signup
-# this is the data that will be sent from the frontend to /api/signup endpoint
 class UserSignup(BaseModel):
     fullName: str
     email: str
     password: str
-
-class SearchInput(BaseModel):
-    text: str
 
 class UserOnboarding(BaseModel):
     major: str
@@ -40,19 +35,4 @@ class UserInDB(BaseModel):
         if mongo_user:
             mongo_user['id'] = str(mongo_user['_id'])
             return cls(**mongo_user)
-        return None
-
-class Course(BaseModel):
-    title: str
-    credits: int
-    course_designation: Optional[str] = None
-    description: Optional[str] = None
-    last_taught: Optional[str] = None
-    learning_outcomes: Optional[str] = None
-    repeatable: Optional[bool] = None
-    requisites: Optional[str] = None
-
-class SavedCourse(BaseModel):
-    user_id: str
-    course_id: str
-    saved_at: Optional[datetime] = None 
+        return None 

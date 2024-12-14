@@ -3,9 +3,11 @@ from bson import ObjectId
 from datetime import datetime
 import os
 from openai import OpenAI
-from backend.database import course_collection
-from backend.models import Course, SearchInput, UserInDB
-from backend.auth import get_current_active_user
+from ..database import course_collection
+from ..models.course import Course
+from ..models.search import SearchInput
+from ..models.user import UserInDB
+from ..auth import get_current_active_user
 from ..vector_search import vector_search
 import asyncio
 import logging

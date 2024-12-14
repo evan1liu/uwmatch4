@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
-from backend.models import User
-from backend.auth import get_current_active_user
-from ..database import user_collection # importing "user_collection" from database.py to connect with mongodb colleciton that stores user data
+from ..models.user import User
+from ..auth import get_current_active_user
+from ..database import user_collection
 
 router = APIRouter()
 

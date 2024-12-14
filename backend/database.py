@@ -6,3 +6,4 @@ db = client.uwmatch  # Database name
 user_collection = db.users
 course_collection = db.courses
 saved_course_collection = db.saved_courses
+roadmap_collection = db.roadmap

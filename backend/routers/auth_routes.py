@@ -2,13 +2,16 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from datetime import timedelta
 from bson import ObjectId
 from datetime import datetime
-from backend.models import UserSignup, Token, UserOnboarding
-from backend.auth import authenticate_user, create_access_token
-from backend.config import Settings
-from backend.database import user_collection
-from backend.utils import get_hashed_password
+from ..models.user import UserSignup, UserInDB, UserOnboarding, Token
+from ..auth import (
+    authenticate_user, 
+    create_access_token,
+    get_current_active_user
+)
+from ..config import Settings
+from ..database import user_collection
+from ..utils import get_hashed_password
 from fastapi.security import OAuth2PasswordRequestForm
-from backend.auth import get_current_active_user, UserInDB
 
 router = APIRouter()
 
