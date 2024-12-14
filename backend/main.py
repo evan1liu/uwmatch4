@@ -5,18 +5,16 @@ from fastapi.responses import FileResponse
 
 from backend.config import Settings
 from backend.routers import api_router
-from backend.database import course_collection
 
 app = FastAPI()
 
 # Add CORS middleware
-# necessary for frontend to call the backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include API router

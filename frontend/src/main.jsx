@@ -21,7 +21,7 @@ const theme = createTheme({
   // You can customize other theme aspects:
   typography: {
     fontFamily: [
-      '-apple-system',
+      'Georgia',
       'BlinkMacSystemFont',
       '"Segoe UI"',
       'Roboto',

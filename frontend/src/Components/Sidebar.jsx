@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Drawer, 
@@ -14,15 +14,47 @@ import {
   Person2 as ProfileIcon,
   ViewModule as RoadmapIcon
 } from '@mui/icons-material';
+import { useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import NavItem from './NavItem';
-import uwmatchIcon from '../assets/uwmatch_icon.svg';
+import uwmatchIcon from '../assets/uwmatch.png';
+import API_BASE_URL from '../api';
 
 const DRAWER_WIDTH = 240;
 
 const Sidebar = () => {
+  const [userData, setUserData] = useState(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const location = useLocation();
+  const navigate = useNavigate();
   const isLoggedIn = location.pathname !== '/login' && location.pathname !== '/signup';
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const response = await axios.get(`${API_BASE_URL}/profile`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        setUserData(response.data);
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        if (err.response?.status === 401) {
+          localStorage.removeItem('token');
+          navigate('/login');
+        }
+      }
+    };
+
+    if (isLoggedIn) {
+      fetchUserData();
+    }
+  }, [isLoggedIn, navigate]);
 
   if (isMobile) return null; // Hide sidebar on mobile
 
@@ -60,23 +92,27 @@ const Sidebar = () => {
 
           {isLoggedIn && (
             <Box sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
-              <Avatar sx={{ width: 40, height: 40, mr: 2 }}>U</Avatar>
+              <Avatar sx={{ width: 40, height: 40, mr: 2 }}>
+                {userData?.full_name ? userData.full_name[0].toUpperCase() : 'U'}
+              </Avatar>
               <Box>
-                <Typography variant="subtitle2">Username</Typography>
+                <Typography variant="subtitle2">
+                  {userData?.full_name || 'Loading...'}
+                </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  user@example.com
+                  {userData?.email || 'Loading...'}
                 </Typography>
               </Box>
             </Box>
           )}
 
           <List>
-              <>
-                <NavItem icon={<SchoolIcon />} label="Courses" path="/courses" />
-                <NavItem icon={<RoadmapIcon />} label="Roadmap" path="roadmap" />
-                <NavItem icon={<BookmarkIcon />} label="Saved Courses" path="/saved-courses" />
-                <NavItem icon={<ProfileIcon />} label="Profile" path="/profile" />
-              </>
+            <>
+              <NavItem icon={<SchoolIcon />} label="Courses" path="/courses" />
+              <NavItem icon={<RoadmapIcon />} label="Roadmap" path="roadmap" />
+              <NavItem icon={<BookmarkIcon />} label="Saved Courses" path="/saved-courses" />
+              <NavItem icon={<ProfileIcon />} label="Profile" path="/profile" />
+            </>
           </List>
         </Box>
       </Drawer>
