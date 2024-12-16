@@ -1,73 +1,88 @@
+// TermColumn.jsx
+import React, { memo } from 'react';
 import { Card, Box, Typography, IconButton } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import { Droppable } from 'react-beautiful-dnd';
 import CourseCard from './CourseCard';
 
-const TermColumn = ({ 
-  year, 
-  term, 
-  courses, 
-  isSelected, 
-  onTermSelect, 
-  onRemoveCourse 
-}) => {
+const TermColumn = memo(({ year, term, courses, isSelected, onTermSelect, onRemoveCourse, onDropCourse }) => {
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.currentTarget.style.backgroundColor = '';
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.currentTarget.style.backgroundColor = '';
+    try {
+      const courseData = JSON.parse(e.dataTransfer.getData('application/json'));
+      onDropCourse(courseData, year, term);
+    } catch (error) {
+      console.error('Error parsing dropped data:', error);
+    }
+  };
+
   return (
     <Card 
       sx={{ 
-        width: 280, // Fixed width
+        width: 280,
         minHeight: 200,
         m: 1,
         backgroundColor: isSelected ? 'action.hover' : 'background.paper',
         transition: 'background-color 0.2s ease',
       }}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
       <Box sx={{ p: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          {`${term} ${year}`}
-        </Typography>
-        
-        <Droppable droppableId={`${year}-${term}`}>
-          {(provided, snapshot) => (
-            <Box
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-              sx={{
-                minHeight: 100,
-                backgroundColor: snapshot.isDraggingOver ? 'action.hover' : 'transparent',
-                transition: 'background-color 0.2s ease',
-              }}
-            >
-              {courses.map((course, index) => (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  index={index}
-                  onRemove={() => onRemoveCourse(course.id)}
-                  isDraggable
-                />
-              ))}
-              {provided.placeholder}
-            </Box>
-          )}
-        </Droppable>
-
-        <Box sx={{ textAlign: 'center', mt: 2 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          mb: 2
+        }}>
+          <Typography variant="h6">
+            {term} {year}
+          </Typography>
           <IconButton 
-            onClick={() => onTermSelect(year, term)}
-            sx={{ 
-              width: '60px',
-              height: '60px',
-              '&:hover': {
-                backgroundColor: 'action.hover',
-              }
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent term selection when clicking the add button
+              onTermSelect(year, term);
             }}
+            color={isSelected ? "primary" : "default"}
           >
-            <AddCircleOutlineIcon sx={{ fontSize: 40 }} />
+            <AddCircleOutlineIcon />
           </IconButton>
+        </Box>
+        
+        <Box
+          sx={{
+            minHeight: 100,
+            transition: 'background-color 0.2s ease',
+            display: 'flex',
+            flexDirection: 'column',
+            padding: 1
+          }}
+        >
+          {Array.isArray(courses) && courses.map((course) => (
+            <CourseCard
+              key={course.id}
+              course={course}
+              onRemove={() => onRemoveCourse(course.id)}
+              isDraggable={true}
+            />
+          ))}
         </Box>
       </Box>
     </Card>
   );
-};
+});
 
-export default TermColumn; 
+TermColumn.displayName = 'TermColumn';
+
+export default TermColumn;

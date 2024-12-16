@@ -30,10 +30,8 @@ async def get_roadmap(current_user = Depends(get_current_active_user)):
         # Transform the data to include course details
         transformed_roadmap = [{
             "id": str(entry["courseId"]),
-            "code": course_lookup[str(entry["courseId"])]["code"],
             "title": course_lookup[str(entry["courseId"])]["title"],
             "credits": course_lookup[str(entry["courseId"])]["credits"],
-            "description": course_lookup[str(entry["courseId"])].get("description"),
             "year": entry["year"],
             "term": entry["term"],
             "addedAt": entry["addedAt"]
@@ -141,21 +139,3 @@ async def move_course(
         return {"message": "Course moved successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-@router.delete("/roadmap/remove")
-async def remove_course(
-    courseId: str,
-    current_user = Depends(get_current_active_user)
-):
-    try:
-        result = await Roadmap.find_one_and_delete({
-            "userId": current_user.id,
-            "courseId": ObjectId(courseId)
-        })
-
-        if not result:
-            raise HTTPException(status_code=404, detail="Course not found in roadmap")
-
-        return {"message": "Course removed successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
