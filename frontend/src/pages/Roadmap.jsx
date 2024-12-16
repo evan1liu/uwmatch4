@@ -1,5 +1,5 @@
 // Roadmap.jsx
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useContext } from 'react';
 import { 
   Grid, 
   Box, 
@@ -11,6 +11,7 @@ import TermColumn from '../Components/TermColumn';
 import CourseSearchPanel from '../Components/CourseSearchPanel';
 import ConfirmDialog from '../Components/ConfirmDialog';
 import TrashZone from '../Components/TrashZone';
+import { SidebarContext } from '../contexts/SidebarContext';
 
 function Roadmap() {
   // States for roadmap data
@@ -25,6 +26,11 @@ function Roadmap() {
     year: null,
     term: null
   });
+
+  const { isCollapsed } = useContext(SidebarContext);
+
+  // Add console.log to debug
+  console.log('Sidebar collapsed:', isCollapsed);
 
   // Reorganize terms by academic years - corrected
   const academicYears = useMemo(() => {
@@ -216,6 +222,12 @@ function Roadmap() {
   };
 
   return (
+    <>
+      <TrashZone 
+        isDragging={isDragging}
+        onDelete={handleDeleteCourse}
+        isCollapsed={isCollapsed}
+      />
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Box
         onDragStart={() => setIsDragging(true)}
@@ -263,11 +275,6 @@ function Roadmap() {
           </Grid>
         </Grid>
       </Box>
-      
-      <TrashZone 
-        isDragging={isDragging}
-        onDelete={handleDeleteCourse}
-      />
 
       <ConfirmDialog
         open={confirmDialog.open}
@@ -299,6 +306,7 @@ function Roadmap() {
         content="Are you sure you want to remove this course from your roadmap?"
       />
     </Container>
+    </>
   );
 }
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { 
   Box, 
   Drawer, 
@@ -22,13 +22,14 @@ import axios from 'axios';
 import NavItem from './NavItem';
 import uwmatchIcon from '../assets/uwmatch.png';
 import API_BASE_URL from '../api';
+import { SidebarContext } from '../contexts/SidebarContext';
 
 const DRAWER_WIDTH = 240;
 const COLLAPSED_WIDTH = 65;  // Width when sidebar is collapsed
 
 const Sidebar = () => {
   const [userData, setUserData] = useState(null);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isCollapsed, setIsCollapsed } = useContext(SidebarContext);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const location = useLocation();

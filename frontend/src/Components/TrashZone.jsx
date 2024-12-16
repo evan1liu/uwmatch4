@@ -3,8 +3,15 @@ import React, { useState } from 'react';
 import { Box } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-const TrashZone = ({ onDelete, isDragging }) => {
+// Use the same constants as defined in Sidebar.jsx
+const DRAWER_WIDTH = 240;
+const COLLAPSED_WIDTH = 65;  // Match the value from Sidebar.jsx
+
+const TrashZone = ({ onDelete, isDragging, isCollapsed }) => {
   const [isOver, setIsOver] = useState(false);
+
+  // Add console.log to debug
+  console.log('TrashZone - isCollapsed:', isCollapsed);
 
   if (!isDragging) return null;
 
@@ -12,17 +19,20 @@ const TrashZone = ({ onDelete, isDragging }) => {
     <Box
       sx={{
         position: 'fixed',
-        top: 0,
+        top: 0, // Adjust based on your AppBar height
         bottom: 0,
-        right: '280px',
-        width: '150px',
-        backgroundColor: isOver ? 'rgba(0, 0, 0, 0.08)' : 'transparent',
+        left: isCollapsed ? `${COLLAPSED_WIDTH}px` : `${DRAWER_WIDTH}px`,
+        width: '30px',
+        backgroundColor: isOver ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 0, 0, 0.02)', // Made slightly visible for debugging
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        transition: 'all 0.3s ease',
+        transition: theme => theme.transitions.create(['left'], {
+          easing: theme.transitions.easing.sharp,
+          duration: theme.transitions.duration.enteringScreen,
+        }),
         zIndex: 1000,
-        borderLeft: isOver ? '2px dashed rgba(0, 0, 0, 0.3)' : '2px dashed transparent',
+        borderLeft: '2px dashed rgba(0, 0, 0, 0.3)', // Always visible for debugging
       }}
       onDragOver={(e) => {
         e.preventDefault();
