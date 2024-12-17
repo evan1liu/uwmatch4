@@ -3,8 +3,12 @@ import {
     Box, 
     TextField, 
     Typography, 
-    CircularProgress 
+    CircularProgress,
+    ButtonGroup,
+    Button
   } from '@mui/material';
+  import SearchIcon from '@mui/icons-material/Search';
+  import BookmarkIcon from '@mui/icons-material/Bookmark';
   import axios from 'axios';
   import API_BASE_URL from '../api';
   import CourseCard from './CourseCard';
@@ -18,6 +22,7 @@ import {
     const [searchQuery, setSearchQuery] = useState('');
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [mode, setMode] = useState('search'); // 'search' or 'saved'
   
     const handleSearch = async (e) => {
       e.preventDefault();
@@ -37,9 +42,27 @@ import {
       }
     };
   
-    const handleAddCourse = (course) => {
-      onAddCourse(course);
-      // Don't clear the search results after adding a course
+    const fetchSavedCourses = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(`${API_BASE_URL}/saved-courses`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        setCourses(response.data);
+      } catch (error) {
+        console.error('Error fetching saved courses:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    const handleModeChange = (newMode) => {
+      setMode(newMode);
+      setCourses([]);
+      setSearchQuery('');
+      if (newMode === 'saved') {
+        fetchSavedCourses();
+      }
     };
   
     return (
@@ -64,6 +87,27 @@ import {
           display: 'flex',
           flexDirection: 'column'
         }}>
+          <ButtonGroup 
+            variant="outlined" 
+            fullWidth 
+            sx={{ mb: 2 }}
+          >
+            <Button 
+              startIcon={<SearchIcon />}
+              onClick={() => handleModeChange('search')}
+              variant={mode === 'search' ? 'contained' : 'outlined'}
+            >
+              Search
+            </Button>
+            <Button 
+              startIcon={<BookmarkIcon />}
+              onClick={() => handleModeChange('saved')}
+              variant={mode === 'saved' ? 'contained' : 'outlined'}
+            >
+              Saved
+            </Button>
+          </ButtonGroup>
+  
           {selectedTerm && (
             <Typography 
               variant="h6" 
@@ -77,17 +121,18 @@ import {
             </Typography>
           )}
           
-          <form onSubmit={handleSearch}>
-            <TextField
-              fullWidth
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search courses..."
-              variant="outlined"
-              sx={{ mb: 2 }}
-              disabled={!selectedTerm}
-            />
-          </form>
+          {mode === 'search' && (
+            <form onSubmit={handleSearch}>
+              <TextField
+                fullWidth
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search courses..."
+                variant="outlined"
+                sx={{ mb: 2 }}
+              />
+            </form>
+          )}
   
           <Box 
             sx={{ 
@@ -97,16 +142,7 @@ import {
               mr: -1
             }}
           >
-            {!selectedTerm ? (
-              <Typography 
-                variant="body1" 
-                color="text.secondary"
-                align="center"
-                sx={{ mt: 4 }}
-              >
-                Select a term to add courses
-              </Typography>
-            ) : loading ? (
+            {loading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
                 <CircularProgress />
               </Box>
@@ -118,8 +154,9 @@ import {
                   isInPlan={Object.values(planCourses).some(
                     termCourses => termCourses?.some(c => c.id === course.id)
                   )}
-                  onAdd={() => handleAddCourse(course)}
-                  isDraggable={false}
+                  onAdd={selectedTerm ? () => onAddCourse(course) : undefined}
+                  isDraggable={true}
+                  sourceType="panel"
                 />
               ))
             ) : (
@@ -128,7 +165,7 @@ import {
                 color="text.secondary"
                 align="center"
               >
-                No courses found
+                {mode === 'search' ? 'No courses found' : 'No saved courses'}
               </Typography>
             )}
           </Box>

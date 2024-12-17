@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from bson import ObjectId
 from datetime import datetime
-from ..models.roadmap import RoadmapEntry
+from ..models.roadmap import RoadmapChange
 from ..auth import get_current_active_user
 from ..database import course_collection, roadmap_collection
 
@@ -42,70 +42,67 @@ async def get_roadmap(current_user = Depends(get_current_active_user)):
         print(f"Error in get_roadmap: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/roadmap/add")
-async def add_or_remove_course(
-    entry: RoadmapEntry,
+@router.post("/roadmap/change")
+async def change_roadmap(
+    change: RoadmapChange,
     current_user = Depends(get_current_active_user)
 ):
     try:
-        print(f"\n=== Adding/Removing Course from Roadmap ===")
-        print(f"Course ID: {entry.courseId}")
-        print(f"Term: {entry.term} {entry.year}")
+        print(f"\n=== Processing Roadmap Change ===")
+        print(f"Course ID: {change.courseId}")
+        print(f"To Term: {change.toTerm} {change.toYear}")
+        print(f"From Term: {change.fromTerm} {change.fromYear if change.fromTerm else 'None'}")
         print(f"User ID: {current_user.id}")
         
         try:
-            course_object_id = ObjectId(entry.courseId)
-            print(f"Converted to ObjectId: {course_object_id}")
+            course_object_id = ObjectId(change.courseId)
         except Exception as e:
-            print(f"Error converting courseId to ObjectId: {e}")
-            raise HTTPException(status_code=400, detail=f"Invalid course ID format: {entry.courseId}")
+            raise HTTPException(status_code=400, detail=f"Invalid course ID format: {change.courseId}")
 
         # Check if course exists
         course = await course_collection.find_one({"_id": course_object_id})
         if not course:
-            print(f"Course not found in database")
-            raise HTTPException(status_code=404, detail=f"Course not found with ID: {entry.courseId}")
+            raise HTTPException(status_code=404, detail=f"Course not found with ID: {change.courseId}")
 
-        # Check if course is already in the roadmap for this term and year
-        existing_entry = await roadmap_collection.find_one({
-            "userId": current_user.id,
-            "courseId": course_object_id,
-            "year": entry.year,
-            "term": entry.term
-        })
-
-        if existing_entry:
-            # Remove the course from this term
+        # If fromTerm is provided, this is a move operation
+        if change.fromTerm:
+            # Remove from old term
             await roadmap_collection.delete_one({
                 "userId": current_user.id,
                 "courseId": course_object_id,
-                "year": entry.year,
-                "term": entry.term
+                "year": change.fromYear,
+                "term": change.fromTerm
             })
-            return {
-                "message": "Course removed from roadmap",
-                "action": "removed"
-            }
 
-        # Add the course to the roadmap
-        new_entry = await roadmap_collection.insert_one({
-            "userId": current_user.id,
-            "courseId": course_object_id,
-            "year": entry.year,
-            "term": entry.term,
-            "addedAt": datetime.utcnow()
-        })
+        # Add to new term
+        await roadmap_collection.update_one(
+            {
+                "userId": current_user.id,
+                "courseId": course_object_id,
+                "year": change.toYear,
+                "term": change.toTerm
+            },
+            {
+                "$set": {
+                    "userId": current_user.id,
+                    "courseId": course_object_id,
+                    "year": change.toYear,
+                    "term": change.toTerm,
+                    "addedAt": datetime.utcnow()
+                }
+            },
+            upsert=True
+        )
 
         return {
-            "message": "Course added to roadmap",
-            "action": "added",
+            "message": "Roadmap updated successfully",
+            "action": "moved" if change.fromTerm else "added",
             "course": {
                 "id": str(course["_id"]),
                 "title": course["title"],
                 "credits": course.get("credits", 0),
-                "description": course.get("description"),
-                "year": entry.year,
-                "term": entry.term
+                "year": change.toYear,
+                "term": change.toTerm
             }
         }
     except HTTPException as e:
@@ -113,29 +110,4 @@ async def add_or_remove_course(
         raise e
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
-        print(f"Error type: {type(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.put("/roadmap/move")
-async def move_course(
-    courseId: str,
-    toYear: int,
-    toTerm: str,
-    current_user = Depends(get_current_active_user)
-):
-    try:
-        course_object_id = ObjectId(courseId)
-        result = await roadmap_collection.update_one(
-            {
-                "userId": current_user.id,
-                "courseId": course_object_id
-            },
-            {"$set": {"year": toYear, "term": toTerm}}
-        )
-
-        if result.modified_count == 0:
-            raise HTTPException(status_code=404, detail="Course not found in roadmap")
-
-        return {"message": "Course moved successfully"}
-    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -12,6 +12,7 @@ import CourseSearchPanel from '../Components/CourseSearchPanel';
 import ConfirmDialog from '../Components/ConfirmDialog';
 import TrashZone from '../Components/TrashZone';
 import { SidebarContext } from '../contexts/SidebarContext';
+import ConfirmCourseMove from '../Components/ConfirmCourseMove';
 
 function Roadmap() {
   // States for roadmap data
@@ -110,7 +111,7 @@ function Roadmap() {
     }
 
     try {
-      await axios.post(`${API_BASE_URL}/roadmap/add`, {
+      await axios.post(`${API_BASE_URL}/roadmap/change`, {
         courseId: course.id,
         year: selectedTerm.year,
         term: selectedTerm.term
@@ -123,7 +124,6 @@ function Roadmap() {
       if (!updatedCourses[termKey]) updatedCourses[termKey] = [];
       updatedCourses[termKey].push({
         id: course.id,
-        code: course.code,
         title: course.title,
         credits: course.credits,
         // Add any other course properties you need
@@ -151,8 +151,8 @@ function Roadmap() {
 
     try {
       // Update to match the backend API endpoint structure
-      const response = await axios.put(
-        `${API_BASE_URL}/roadmap/move`, 
+      const response = await axios.post(
+        `${API_BASE_URL}/roadmap/change`, 
         null,  // no request body needed since we're using query params
         {
           params: {
@@ -188,36 +188,119 @@ function Roadmap() {
   // Handle course deletion
   const handleDeleteCourse = async (course) => {
     try {
-      // Find which term the course is in
-      let sourceKey = null;
-      let sourceTerm = null;
-      let sourceYear = null;
+      // Find which term the course is in using our existing helper
+      const existingTerm = findExistingCourseTerm(course.id);
+      
+      if (!existingTerm) return; // Course not found in roadmap
 
-      for (const [key, courses] of Object.entries(planCourses)) {
-        if (courses.some(c => c.id === course.id)) {
-          sourceKey = key;
-          [sourceYear, sourceTerm] = key.split('_');
-          break;
-        }
-      }
-
-      if (!sourceKey) return;
-
-      await axios.post(`${API_BASE_URL}/roadmap/add`, {
+      await axios.post(`${API_BASE_URL}/roadmap/change`, {
         courseId: course.id,
-        year: parseInt(sourceYear),
-        term: sourceTerm
+        fromYear: parseInt(existingTerm.year),
+        fromTerm: existingTerm.term,
+        toYear: null,
+        toTerm: null,
+        toTrash: true
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
 
+      // Update local state
       const updatedCourses = { ...planCourses };
-      updatedCourses[sourceKey] = updatedCourses[sourceKey].filter(
+      const termKey = `${existingTerm.year}_${existingTerm.term}`;
+      updatedCourses[termKey] = updatedCourses[termKey].filter(
         c => c.id !== course.id
       );
       setPlanCourses(updatedCourses);
     } catch (error) {
       console.error('Error deleting course:', error);
+    }
+  };
+
+  const [moveDialog, setMoveDialog] = useState({
+    open: false,
+    course: null,
+    existingTerm: null,
+    existingYear: null,
+    targetTerm: null,
+    targetYear: null
+  });
+
+  // Find existing course term using frontend data
+  const findExistingCourseTerm = (courseId) => {
+    for (const [key, courses] of Object.entries(planCourses)) {
+      if (courses?.some(c => c.id === courseId)) {
+        const [year, term] = key.split('_');
+        return { year: parseInt(year), term };
+      }
+    }
+    return null;
+  };
+
+  const handleCourseChange = async (course, toYear, toTerm, fromYear = null, fromTerm = null) => {
+    try {
+      console.log('Course change:', { course, toYear, toTerm, fromYear, fromTerm }); // Debug log
+      
+      const response = await axios.post(`${API_BASE_URL}/roadmap/change`, {
+        courseId: course.id,
+        toYear: parseInt(toYear),
+        toTerm: toTerm,
+        fromYear: fromYear ? parseInt(fromYear) : null,
+        fromTerm: fromTerm
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+
+      // Update local state
+      const updatedCourses = { ...planCourses };
+      
+      // Remove from old term if it exists
+      if (fromYear && fromTerm) {
+        const fromKey = `${fromYear}_${fromTerm}`;
+        updatedCourses[fromKey] = updatedCourses[fromKey].filter(c => c.id !== course.id);
+      }
+
+      // Add to new term
+      const toKey = `${toYear}_${toTerm}`;
+      if (!updatedCourses[toKey]) updatedCourses[toKey] = [];
+      updatedCourses[toKey].push(course);
+
+      setPlanCourses(updatedCourses);
+    } catch (error) {
+      console.error('Error updating roadmap:', error);
+    }
+  };
+
+  // Handle drop on term
+  const handleDrop = async (course, year, term, sourceType) => {
+    console.log('Roadmap handleDrop:', { course, year, term, sourceType });
+    
+    try {
+      const existingTerm = findExistingCourseTerm(course.id);
+      console.log('Existing term:', existingTerm);
+
+      // If dragging from panel and course exists in roadmap
+      if (sourceType === 'panel' && existingTerm) {
+        setMoveDialog({
+          open: true,
+          course,
+          existingTerm: existingTerm.term,
+          existingYear: existingTerm.year,
+          targetTerm: term,
+          targetYear: year
+        });
+        return;
+      }
+
+      // Either moving between terms or adding new course
+      await handleCourseChange(
+        course,
+        year,
+        term,
+        existingTerm?.year,
+        existingTerm?.term
+      );
+    } catch (error) {
+      console.error('Error in handleDrop:', error);
     }
   };
 
@@ -270,7 +353,21 @@ function Roadmap() {
             <CourseSearchPanel
               selectedTerm={selectedTerm}
               planCourses={planCourses}
-              onAddCourse={handleAddCourse}
+              onAddCourse={(course) => {
+                const existingTerm = findExistingCourseTerm(course.id);
+                if (existingTerm) {
+                  setMoveDialog({
+                    open: true,
+                    course,
+                    existingTerm: existingTerm.term,
+                    existingYear: existingTerm.year,
+                    targetTerm: selectedTerm.term,
+                    targetYear: selectedTerm.year
+                  });
+                } else {
+                  handleCourseChange(course, selectedTerm.year, selectedTerm.term);
+                }
+              }}
             />
           </Grid>
         </Grid>
@@ -281,7 +378,7 @@ function Roadmap() {
         onClose={() => setConfirmDialog({ ...confirmDialog, open: false })}
         onConfirm={async () => {
           try {
-            await axios.post(`${API_BASE_URL}/roadmap/add`, {
+            await axios.post(`${API_BASE_URL}/roadmap/change`, {
               courseId: confirmDialog.courseId,
               year: confirmDialog.year,
               term: confirmDialog.term
@@ -304,6 +401,18 @@ function Roadmap() {
         }}
         title="Remove Course"
         content="Are you sure you want to remove this course from your roadmap?"
+      />
+      <ConfirmCourseMove
+        open={moveDialog.open}
+        onClose={() => setMoveDialog({ ...moveDialog, open: false })}
+        onConfirm={() => {
+          const { course, targetYear, targetTerm, existingYear, existingTerm } = moveDialog;
+          handleCourseChange(course, targetYear, targetTerm, existingYear, existingTerm);
+          setMoveDialog({ ...moveDialog, open: false });
+        }}
+        course={moveDialog.course}
+        existingTerm={moveDialog.existingTerm}
+        existingYear={moveDialog.existingYear}
       />
     </Container>
     </>

@@ -58,18 +58,21 @@ async def get_course(course_id: str):
 async def search_courses(search_input: SearchInput, current_user: UserInDB = Depends(get_current_active_user)):
     try:
         logging.info("=== Search Request ===")
-        logging.info(f"Search text: {search_input.text}")
+        # Capitalize the search text
+        capitalized_search = search_input.text.upper()
+        logging.info(f"Original search text: {search_input.text}")
+        logging.info(f"Capitalized search text: {capitalized_search}")
         
         use_code_embedding = any(
-            search_input.text[i:i+3].isdigit() 
-            for i in range(len(search_input.text)-2)
+            capitalized_search[i:i+3].isdigit() 
+            for i in range(len(capitalized_search)-2)
         )
         logging.info(f"Detected course code? {use_code_embedding}")
         logging.info(f"Using {'code_embeddings' if use_code_embedding else 'title_embedding'} for search")
         
-        # Get embedding for search term
+        # Get embedding for capitalized search term
         response = client.embeddings.create(
-            input=search_input.text,
+            input=capitalized_search,
             model="text-embedding-3-small"
         )
         search_embedding = response.data[0].embedding

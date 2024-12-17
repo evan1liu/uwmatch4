@@ -19,10 +19,12 @@ const TermColumn = memo(({ year, term, courses, isSelected, onTermSelect, onRemo
     e.preventDefault();
     e.currentTarget.style.backgroundColor = '';
     try {
-      const courseData = JSON.parse(e.dataTransfer.getData('application/json'));
-      onDropCourse(courseData, year, term);
+      const course = JSON.parse(e.dataTransfer.getData('application/json'));
+      const sourceType = e.dataTransfer.getData('sourceType') || 'term';
+      console.log('TermColumn Drop:', { course, year, term, sourceType });
+      onDropCourse(course, year, term, sourceType);
     } catch (error) {
-      console.error('Error parsing dropped data:', error);
+      console.error('Error in TermColumn drop:', error);
     }
   };
 

@@ -26,3 +26,11 @@ class Roadmap(BaseModel):
                 "addedAt": datetime.utcnow()
             }
         } 
+
+class RoadmapChange(BaseModel):
+    courseId: str
+    toYear: Optional[int]
+    toTerm: Optional[str]
+    fromYear: Optional[int] = None
+    fromTerm: Optional[str] = None
+    toTrash: Optional[bool] = False  # New field for trash operations

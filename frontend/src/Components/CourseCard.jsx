@@ -9,16 +9,19 @@ const CourseCard = ({
   course, 
   onAdd, // this is the function for adding a course to the roadmap for the right side search panel
   isDraggable = false, // this determines if a course is draggable. it's draggable when it's in the roadmap but not draggable when it's in the search panel
-  isInPlan = false 
+  isInPlan = false,
+  sourceType = 'term'  // Default to 'term'
 }) => {
   const handleDragStart = (e) => {
+    console.log('Drag start:', { course, sourceType });
     e.dataTransfer.setData('application/json', JSON.stringify(course));
+    e.dataTransfer.setData('sourceType', sourceType);
   };
 
   const cardContent = (
     <Card 
       draggable={isDraggable}
-      onDragStart={isDraggable ? handleDragStart : undefined}
+      onDragStart={handleDragStart}
       sx={{ 
         mb: 1,
         '&:hover': {
