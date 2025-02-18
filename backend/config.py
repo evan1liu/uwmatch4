@@ -13,6 +13,6 @@ class Settings:
     # how long the token will expire after login (this will be encoded in the JWT token)
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30 * 24 * 60 # 30 days
     # importing the MongoDB connection string from the .env file
-    MONGODB_URL: str = os.getenv("MONGODB_URL")
+    MONGODB_URI: str = os.getenv("MONGODB_URI")
     # get the "ENV" variable from the .env, if it's not defined, default to "development" 
     ENV: str = os.getenv("ENV", "development")

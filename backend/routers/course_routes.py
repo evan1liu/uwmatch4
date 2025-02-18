@@ -18,40 +18,72 @@ client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 @router.get("/courses")
 async def get_courses(
+    # "Query" is a Fast API class
+    # the "page" value is based on where the user is scrolling to
     page: int = Query(1, ge=1),
-    limit: int = Query(18, ge=1, le=100),
+    
+    # we're currently not using this, but it will be helpful
+    # when we want to add any algorithms or recommendations
+    # for this specific user
     current_user: UserInDB = Depends(get_current_active_user)
 ):
+    limit = 18
     skip = (page - 1) * limit
     
-    # Get total count for pagination
-    total_courses = await course_collection.count_documents({})
+    # "Projection" is a Python dictionary that tells MongoDB what fields
+    # we want to return when we turn the cursor into a list
+    # number "1" means we want to return the field,
+    # and all other fields we're not returning
+    projection = {
+        "_id": 1,  # Always include _id for conversion to string id
+        "title": 1,
+        "credits": 1,
+        # Add other fields you want to include
+    }
     
-    # Fetch courses with pagination
-    cursor = course_collection.find({}).skip(skip).limit(limit)
-    courses = await cursor.to_list(length=limit)
+    # Total number of courses in the database
+    total_courses: int = await course_collection.count_documents({})
     
-    # Convert ObjectId to string for each course
+    # "cursor" is just a "query", a "plan" of how we'll be fetching the data
+    # to_list() is where we actually executes the query and get the data
+    # when we use find({}), that means we're not filtering any data
+    # we're just fetching the data based on the order of the data in the database
+    cursor = course_collection.find({}, projection).skip(skip).limit(limit)
+    courses = await cursor.to_list()
+    
+    # This converts the MongoDB ObjectId into a normal string id
     for course in courses:
         course["id"] = str(course["_id"])
         del course["_id"]
     
-    # Check if there are more courses
-    has_more = (skip + limit) < total_courses
-    
     return {
         "courses": courses,
-        "has_more": has_more,
+        "has_more": (skip + limit) < total_courses,
         "total": total_courses
     }
 
 @router.get("/courses/{course_id}")
 async def get_course(course_id: str):
-    course = await course_collection.find_one({"_id": ObjectId(course_id)})
+    
+    projection = {
+        "_id": 1,
+        "title": 1,
+        "course_designation": 1, # check with frontend, the course designation isn't showing
+        "credits": 1,
+        "description": 1,
+        "last_taught": 1,
+        "learning_outcomes": 1,
+        "repeatable": 1,
+        "requisites": 1
+    }
+    
+    course = await course_collection.find_one({"_id": ObjectId(course_id)}, projection)
+    
     if course:
         course["id"] = str(course["_id"])
         del course["_id"]
         return course
+    
     raise HTTPException(status_code=404, detail="Course not found")
 
 @router.post("/search-courses")

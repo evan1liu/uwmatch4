@@ -76,7 +76,7 @@ function CourseDetail() {
                                 mb: 2 
                             }}
                         >
-                            {course.designation}
+                            {course.course_designation}
                         </Typography>
                     </Box>
                     <Box sx={{ mt: 2 }}>

@@ -51,7 +51,6 @@ async def get_saved_courses(current_user: UserInDB = Depends(get_current_active_
         "id": str(course["_id"]),
         "title": course.get("title", "No title"),
         "credits": course.get("credits", 0),
-        "embedding": course.get("title_embedding"),
     } for course in courses] 
 
 import os
