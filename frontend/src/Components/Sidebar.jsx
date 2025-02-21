@@ -25,6 +25,7 @@ import { SidebarContext } from '../contexts/SidebarContext';
 import axios from 'axios';
 import API_BASE_URL from '../api';
 import uwmatchIcon from '../assets/uwmatch.png';
+import Cookies from 'js-cookie';
 
 export default function Sidebar() {
   const { isCollapsed, setIsCollapsed } = useContext(SidebarContext);
@@ -33,7 +34,7 @@ export default function Sidebar() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = Cookies.get('token');
     if (token) {
       setIsLoggedIn(true);
       const fetchUserData = async () => {
@@ -44,7 +45,7 @@ export default function Sidebar() {
           setUserData(response.data);
         } catch (error) {
           console.error('Error fetching user data:', error);
-          localStorage.removeItem('token');
+          Cookies.remove('token');
           setIsLoggedIn(false);
         }
       };

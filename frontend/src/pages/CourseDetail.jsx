@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import API_BASE_URL from '../api'; // fetches the base URL
 import LoadingOverlay from '../Effects/LoadingOverlay';
+import Cookies from 'js-cookie'
 
 function CourseDetail() {
     const [course, setCourse] = useState(null);
@@ -18,7 +19,7 @@ function CourseDetail() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
+        const token = Cookies.get('token');
                 
         const fetchCourse = async () => {
             try {

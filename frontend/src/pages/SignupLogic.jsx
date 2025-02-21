@@ -9,6 +9,7 @@ import LoadingOverlay from '../Effects/LoadingOverlay';
 import { performPendingAction } from '../utils/authUtils';
 
 import { majors, years } from '../Data/MajorsAndYears';
+import Cookies from 'js-cookie'
 
 export default function SignupLogic() {
     const [formData, setFormData] = useState({
@@ -57,8 +58,11 @@ export default function SignupLogic() {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-            localStorage.setItem('token', response.data.access_token);
-            await performPendingAction(localStorage.getItem('token'));
+
+            Cookies.set('token', response.data.access_token,
+                { expires: 30, secure: true, sameSite: 'strict' });
+
+            await performPendingAction(Cookies.get('token'));
 
             // Instead of navigate('/onboarding'), we switch to onboarding stage
             setStage('onboarding');
@@ -90,7 +94,7 @@ export default function SignupLogic() {
             // Example onboarding endpoint
             await axios.post(`${API_BASE_URL}/onboarding`, submitData, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                    Authorization: `Bearer ${Cookies.get('token')}`,
                 },
             });
 

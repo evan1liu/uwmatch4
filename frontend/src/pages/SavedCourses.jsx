@@ -13,6 +13,7 @@ import API_BASE_URL from '../api';
 import LoadingOverlay from '../Effects/LoadingOverlay';
 import ConfirmUnsave from '../PopoutWIndows/ConfirmUnsave';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
+import Cookies from 'js-cookie';
 
 function SavedCourses() {
   const [courses, setCourses] = useState([]);
@@ -24,7 +25,7 @@ function SavedCourses() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = Cookies.get('token');
     if (token) {
       setIsAuthenticated(true);
       const fetchSavedCourses = async () => {
@@ -50,7 +51,7 @@ function SavedCourses() {
   }, []);
 
   const unsaveCourse = async (courseId) => {
-    const token = localStorage.getItem('token');
+    const token = Cookies.get('token');
     if (!token) return;
 
     try {

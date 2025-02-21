@@ -10,6 +10,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme, useMediaQuery } from '@mui/material';
+import Cookies from 'js-cookie';
 
 const BottomNav = () => {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ const BottomNav = () => {
 
   const handleLogout = () => {
     setOpenDialog(false);
-    localStorage.removeItem('token');
+    Cookies.remove('token');
     navigate('/login');
   };
 

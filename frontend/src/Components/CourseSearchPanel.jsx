@@ -13,6 +13,7 @@ import {
   import API_BASE_URL from '../api';
   import CourseCard from './CourseCard';
   import { useState } from 'react';
+  import Cookies from 'js-cookie'
   
   const CourseSearchPanel = ({ 
     selectedTerm, 
@@ -32,7 +33,7 @@ import {
       try {
         const response = await axios.post(`${API_BASE_URL}/search-courses`, 
           { text: searchQuery },
-          { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }}
+          { headers: { Authorization: `Bearer ${Cookies.get('token')}` }}
         );
         setCourses(response.data);
       } catch (error) {
@@ -46,7 +47,7 @@ import {
       setLoading(true);
       try {
         const response = await axios.get(`${API_BASE_URL}/saved-courses`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${Cookies.get('token')}` }
         });
         setCourses(response.data);
       } catch (error) {

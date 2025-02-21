@@ -15,6 +15,7 @@ import {
 import API_BASE_URL from '../api';
 import { Logout as LogoutIcon } from '@mui/icons-material';
 import ConfirmLogout from '../PopoutWIndows/ConfirmLogout';
+import Cookies from 'js-cookie';
 
 export default function Profile() {
   const [userData, setUserData] = useState(null);
@@ -25,7 +26,7 @@ export default function Profile() {
   const [openDialog, setOpenDialog] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = Cookies.get('token');
     if (token) {
       setIsAuthenticated(true);
       const fetchUserData = async () => {
@@ -38,7 +39,7 @@ export default function Profile() {
           console.error('Error:', err);
           setError('Failed to fetch user data');
           if (err.response?.status === 401) {
-            localStorage.removeItem('token');
+            Cookies.remove('token');
             setIsAuthenticated(false);
           }
         } finally {
@@ -54,7 +55,7 @@ export default function Profile() {
 
   const handleLogout = () => {
     setOpenDialog(false);
-    localStorage.removeItem('token');
+    Cookies.remove('token');
     navigate('/login');
   };
 

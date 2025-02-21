@@ -4,6 +4,7 @@ import axios from 'axios';
 import API_BASE_URL from '../api';
 import LoginForm from '../Forms/LoginForm';
 import { performPendingAction } from '../utils/authUtils';
+import Cookies from 'js-cookie';
 
 export default function LoginLogic() {
     // this is a React state object for storing the login data in JavaScript object
@@ -27,7 +28,7 @@ export default function LoginLogic() {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-            localStorage.setItem('token', response.data.access_token);
+            Cookies.set('token', response.data.access_token, { expires: 30, secure: true, sameSite: 'strict' });
             await performPendingAction(response.data.access_token);
             navigate('/profile');
         } catch (err) {

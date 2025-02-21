@@ -1,8 +1,9 @@
 import axios from 'axios';
 import API_BASE_URL from '../api';
+import Cookies from 'js-cookie';
 
 export const performPendingAction = async (token) => {
-    const pendingAction = localStorage.getItem('pendingAction');
+    const pendingAction = Cookies.get('pendingAction');
     if (!pendingAction) return;
 
     try {
@@ -29,6 +30,6 @@ export const performPendingAction = async (token) => {
     } catch (error) {
         console.error('Error performing pending action:', error);
     } finally {
-        localStorage.removeItem('pendingAction');
+        Cookies.remove('pendingAction');
     }
 };

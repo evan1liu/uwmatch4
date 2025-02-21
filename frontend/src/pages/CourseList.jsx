@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import LoadingOverlay from '../Effects/LoadingOverlay';
+import Cookies from 'js-cookie'; 
 
 function CourseList() {
     const [courses, setCourses] = useState([]);
@@ -43,7 +44,7 @@ function CourseList() {
 
     // Modified fetch courses function
     const fetchCourses = async (pageNum) => {
-        const token = localStorage.getItem('token');
+        const token = Cookies.get('token');
 
         setIsLoading(true);
         try {
@@ -91,7 +92,7 @@ function CourseList() {
         
         setIsSearching(true);
         try {
-            const token = localStorage.getItem('token');
+            const token = Cookies.get('token');
             const response = await fetch(`${API_BASE_URL}/search-courses`, {
                 method: 'POST',
                 headers: {
@@ -124,12 +125,12 @@ function CourseList() {
         e.preventDefault();
         e.stopPropagation();
     
-        const token = localStorage.getItem('token');
+        const token = Cookies.get('token');
         if (!token) {
-            localStorage.setItem('pendingAction', JSON.stringify({
+            Cookies.set('pendingAction', JSON.stringify({
                 type: 'saveCourse',
                 courseId: courseId
-            }));
+              }), { expires: 1 });
             navigate('/login');
             return;
         }

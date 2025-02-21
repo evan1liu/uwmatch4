@@ -8,6 +8,7 @@ import ConfirmDialog from '../Components/ConfirmDialog';
 import TrashZone from '../Components/TrashZone';
 import { SidebarContext } from '../contexts/SidebarContext';
 import ConfirmCourseMove from '../Components/ConfirmCourseMove';
+import Cookies from 'js-cookie';
 
 function Roadmap() {
   const [planCourses, setPlanCourses] = useState({});
@@ -59,7 +60,7 @@ function Roadmap() {
   );
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = Cookies.get('token');
     if (token) {
       setIsAuthenticated(true);
       const fetchRoadmap = async () => {
@@ -112,7 +113,7 @@ function Roadmap() {
           year: selectedTerm.year,
           term: selectedTerm.term,
         },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        { headers: { Authorization: `Bearer ${Cookies.get('token')}` } }
       );
       const updatedCourses = { ...planCourses };
       if (!updatedCourses[termKey]) updatedCourses[termKey] = [];
@@ -150,7 +151,7 @@ function Roadmap() {
           fromYear: fromYear ? parseInt(fromYear) : null,
           fromTerm: fromTerm,
         },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+        { headers: { Authorization: `Bearer ${Cookies.get.getItem('token')}` } }
       );
       const updatedCourses = { ...planCourses };
       if (fromYear && fromTerm) {
@@ -223,7 +224,7 @@ function Roadmap() {
                 toTerm: null,
                 toTrash: true,
               },
-              { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+              { headers: { Authorization: `Bearer ${Cookies.get.getItem('token')}` } }
             );
             const updatedCourses = { ...planCourses };
             const termKey = `${existingTerm.year}_${existingTerm.term}`;
@@ -302,7 +303,7 @@ function Roadmap() {
                   toTerm: null,
                   toTrash: true,
                 },
-                { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+                { headers: { Authorization: `Bearer ${Cookies.get.getItem('token')}` } }
               );
               const termKey = `${confirmDialog.year}_${confirmDialog.term}`;
               const updatedCourses = { ...planCourses };
