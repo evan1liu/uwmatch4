@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import API_BASE_URL from '../api';
 
@@ -28,12 +28,12 @@ export default function SignupLogic() {
 
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const token = Cookies.get('token');
-        if (token && stage === 'signup') {
-          navigate('/courses');
-        }
-      }, [stage, navigate]);
+    const token = Cookies.get('token');
+    
+    if (token) {
+        // Redirect to /courses immediately if token exists
+        return <Navigate to="/courses" replace />;
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import API_BASE_URL from '../api';
 import LoginForm from '../Forms/LoginForm';
@@ -15,12 +15,12 @@ export default function LoginLogic() {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const token = Cookies.get('token');
-        if (token) {
-          navigate('/courses');
-        }
-      }, [navigate]);
+    const token = Cookies.get('token');
+    
+    if (token) {
+        // Redirect to /courses immediately if token exists
+        return <Navigate to="/courses" replace />;
+    }
   
     const handleSubmit = async (e) => {
         e.preventDefault();
