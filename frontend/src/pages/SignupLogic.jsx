@@ -28,6 +28,13 @@ export default function SignupLogic() {
 
     const navigate = useNavigate();
 
+    useEffect(() => {
+        const token = Cookies.get('token');
+        if (token && stage === 'signup') {
+          navigate('/courses');
+        }
+      }, [stage, navigate]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (formData.password !== formData.confirmPassword) {

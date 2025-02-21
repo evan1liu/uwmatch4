@@ -4,6 +4,9 @@ import { BrowserRouter } from 'react-router-dom'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
 import App from './App'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'; // Add this
+
+const queryClient = new QueryClient(); // Create a QueryClient instance
 
 // Create a custom theme (optional)
 const theme = createTheme({
@@ -35,10 +38,12 @@ const theme = createTheme({
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
-      <CssBaseline /> {/* Normalizes CSS across browsers */}
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <CssBaseline />
+      <QueryClientProvider client={queryClient}> {/* Wrap your app */}
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </QueryClientProvider>
     </ThemeProvider>
   </React.StrictMode>
-)
+);
