@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Container, Box } from '@mui/material';
 import LoginLogic from './pages/LoginLogic';
@@ -8,7 +7,7 @@ import CourseList from './pages/CourseList';
 import CourseDetail from './pages/CourseDetail';
 import SavedCourses from './pages/SavedCourses';
 import Roadmap from './pages/Roadmap';
-import Sidebar from './Components/Sidebar'
+import Sidebar from './Components/Sidebar';
 import BottomNav from './Components/BottomNav';
 import { useLocation } from 'react-router-dom';
 import { SidebarProvider } from './contexts/SidebarContext';
@@ -25,7 +24,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<LoginLogic />} />
             <Route path="/signup" element={<SignupLogic />} />
-            <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="/" element={<Navigate to="/courses" />} />
             <Route path="/courses" element={<CourseList />} />
             <Route path="/courses/:id" element={<CourseDetail />} />
             <Route path="/saved-courses" element={<SavedCourses />} />

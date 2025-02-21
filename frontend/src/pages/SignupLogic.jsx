@@ -6,6 +6,7 @@ import API_BASE_URL from '../api';
 import SignupForm from '../Forms/SignupForm';
 import OnboardingForm from '../Forms/OnboardingForm';
 import LoadingOverlay from '../Effects/LoadingOverlay';
+import { performPendingAction } from '../utils/authUtils';
 
 import { majors, years } from '../Data/MajorsAndYears';
 
@@ -57,6 +58,7 @@ export default function SignupLogic() {
                 },
             });
             localStorage.setItem('token', response.data.access_token);
+            await performPendingAction(localStorage.getItem('token'));
 
             // Instead of navigate('/onboarding'), we switch to onboarding stage
             setStage('onboarding');

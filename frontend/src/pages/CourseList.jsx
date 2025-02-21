@@ -44,10 +44,6 @@ function CourseList() {
     // Modified fetch courses function
     const fetchCourses = async (pageNum) => {
         const token = localStorage.getItem('token');
-        if (!token) {
-            navigate('/login');
-            return;
-        }
 
         setIsLoading(true);
         try {
@@ -99,7 +95,6 @@ function CourseList() {
             const response = await fetch(`${API_BASE_URL}/search-courses`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ text: term })
@@ -128,13 +123,17 @@ function CourseList() {
     const handleSaveCourse = async (e, courseId) => {
         e.preventDefault();
         e.stopPropagation();
-
+    
         const token = localStorage.getItem('token');
         if (!token) {
+            localStorage.setItem('pendingAction', JSON.stringify({
+                type: 'saveCourse',
+                courseId: courseId
+            }));
             navigate('/login');
             return;
         }
-
+    
         try {
             const response = await fetch(`${API_BASE_URL}/save-course/${courseId}`, {
                 method: 'POST',
@@ -143,11 +142,9 @@ function CourseList() {
                     'Content-Type': 'application/json'
                 }
             });
-
             if (!response.ok) {
                 throw new Error('Failed to update course save status');
             }
-
             setSavedCourses(prev => {
                 const newSet = new Set(prev);
                 if (newSet.has(courseId)) {
@@ -161,7 +158,6 @@ function CourseList() {
             console.error('Error updating course save status:', error);
         }
     };
-
     return (
         <Container sx={{ mt: 4, pb: 8 }}>
             {/* Search Input with combined loading effects */}

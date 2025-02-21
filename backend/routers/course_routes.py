@@ -21,11 +21,6 @@ async def get_courses(
     # "Query" is a Fast API class
     # the "page" value is based on where the user is scrolling to
     page: int = Query(1, ge=1),
-    
-    # we're currently not using this, but it will be helpful
-    # when we want to add any algorithms or recommendations
-    # for this specific user
-    current_user: UserInDB = Depends(get_current_active_user)
 ):
     limit = 18
     skip = (page - 1) * limit
@@ -87,7 +82,7 @@ async def get_course(course_id: str):
     raise HTTPException(status_code=404, detail="Course not found")
 
 @router.post("/search-courses")
-async def search_courses(search_input: SearchInput, current_user: UserInDB = Depends(get_current_active_user)):
+async def search_courses(search_input: SearchInput):
     try:
         logging.info("=== Search Request ===")
         # Capitalize the search text

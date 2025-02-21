@@ -19,12 +19,7 @@ function CourseDetail() {
 
     useEffect(() => {
         const token = localStorage.getItem('token');
-        
-        if (!token) { // if the user doesn't have a token, redirect them to the login page
-            navigate('/login');
-            return;
-        }
-        
+                
         const fetchCourse = async () => {
             try {
                 const response = await fetch(`${API_BASE_URL}/courses/${id}`, {

@@ -1,18 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-    Card, 
-    CardContent, 
-    Typography, 
-    Grid, 
-    Container,
-    CircularProgress,
-    Button,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Box
+import {
+  Card,
+  CardContent,
+  Typography,
+  Grid,
+  Container,
+  Button,
+  Box,
 } from '@mui/material';
 import API_BASE_URL from '../api';
 import LoadingOverlay from '../Effects/LoadingOverlay';
@@ -20,146 +15,132 @@ import ConfirmUnsave from '../PopoutWIndows/ConfirmUnsave';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 
 function SavedCourses() {
-    const [courses, setCourses] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [savedCourses, setSavedCourses] = useState(new Set());
-    const [openDialog, setOpenDialog] = useState(false);
-    const [selectedCourse, setSelectedCourse] = useState(null);
-    const navigate = useNavigate();
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [savedCourses, setSavedCourses] = useState(new Set());
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const navigate = useNavigate();
 
-    const fetchSavedCourses = async () => {
-        // fetch token from the browser's localStorage (Google Chrome: Application > Local Storage)
-        const token = localStorage.getItem('token');
-        if (!token) {
-            navigate('/login');
-            return;
-        }
-
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setIsAuthenticated(true);
+      const fetchSavedCourses = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/saved-courses`, {
-            // after the user is logged in, whenever he/she wants to access user data, we need to sent this headers in this exact format
-            // you cannot change this format, it's defined by the OAuth 2.0 specification (RFC 6750)
-            // also, this is a javascript object with the key called "headers" and with the value being another object
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            // set a constant called "data" that is the object returned from the backend
-            // this data is a list of course objects with simplified information
-            const data = await response.json();
-            // set the react state object courses as "data" (containing course objects)
-            setCourses(data);
-            // create a new list with just string ids of courses, not objects!
-            setSavedCourses(new Set(data.map(course => course.id)));
+          const response = await fetch(`${API_BASE_URL}/saved-courses`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!response.ok) throw new Error('Failed to fetch saved courses');
+          const data = await response.json();
+          setCourses(data);
+          setSavedCourses(new Set(data.map((course) => course.id)));
         } catch (error) {
-            console.error('Error fetching saved courses:', error);
+          console.error('Error fetching saved courses:', error);
         } finally {
-            // when done, setLoading(false) and stops the loading animation
-            setLoading(false);
+          setLoading(false);
         }
-    };
+      };
+      fetchSavedCourses();
+    } else {
+      setIsAuthenticated(false);
+      setLoading(false);
+    }
+  }, []);
 
-    // when the user lands on this page, it triggers use effect and triggers the function fetchSavedCourses()
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        
-        if (!token) {
-            navigate('/login');
-            return;
-        }
-        
-        fetchSavedCourses();
-    }, []);
+  const unsaveCourse = async (courseId) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
 
+    try {
+      const response = await fetch(`${API_BASE_URL}/save-course/${courseId}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to unsave course');
+      setOpenDialog(false);
+      setCourses(courses.filter((course) => course.id !== courseId));
+      setSavedCourses((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(courseId);
+        return newSet;
+      });
+    } catch (error) {
+      console.error('Error unsaving course:', error);
+    }
+  };
 
-    const unsaveCourse = async (courseId) => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            navigate('/login');
-            return;
-        }
+  const handleUnsaveClick = (e, course) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedCourse(course);
+    setOpenDialog(true);
+  };
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/save-course/${courseId}`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+  if (loading) return <LoadingOverlay />;
 
-            if (!response.ok) {
-                throw new Error('Failed to update course save status');
-            }
-            // close the confirm unsave course dialogue
-            setOpenDialog(false);
-            // Reload the courses after unsaving
-            fetchSavedCourses();
-        } catch (error) {
-            console.error('Error updating course save status:', error);
-        }
-    };
-
-    const handleUnsaveClick = (e, course) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setSelectedCourse(course);
-        setOpenDialog(true);
-    };
-
-
+  if (!isAuthenticated) {
     return (
-        <>
-            {loading && <LoadingOverlay />}
-            <Container sx={{ mt: 4, pb: 8 }}>
-                <Typography variant="h4" gutterBottom>
-                    Saved Courses
-                </Typography>
-                <Grid container spacing={3}>
-                    {courses.map((course) => (
-                        <Grid item xs={12} sm={6} md={4} key={course.id}>
-                            <Link to={`/courses/${course.id}`} style={{ textDecoration: 'none' }}>
-                                <Card sx={{ height: '100%', '&:hover': { boxShadow: 6 } }}>
-                                    <CardContent>
-                                        <Typography variant="h6" component="div">
-                                            {course.title}
-                                        </Typography>
-                                        <Typography color="text.secondary">
-                                            Credits: {course.credits}
-                                        </Typography>
-                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                            <Button 
-                                                onClick={(e) => handleUnsaveClick(e, course)}
-                                                color="primary"
-                                                sx={{ minWidth: 'auto' }}
-                                            >
-                                                <BookmarkIcon />
-                                            </Button>
-                                        </Box>
-
-                                    </CardContent>
-                                </Card>
-                            </Link>
-                        </Grid>
-                    ))}
-                    {!loading && courses.length === 0 && (
-                        <Grid item xs={12}>
-                            <Typography variant="h6" color="text.secondary" align="center">
-                                No saved courses yet
-                            </Typography>
-                        </Grid>
-                    )}
-                </Grid>
-            </Container>
-
-            <ConfirmUnsave
-                openDialog={openDialog}
-                onClose={() => setOpenDialog(false)}
-                onConfirm={() => unsaveCourse(selectedCourse?.id)}
-                courseTitle={selectedCourse?.title}
-            />
-        </>
+      <Container sx={{ mt: 4, pb: 8 }}>
+        <Typography variant="h6" color="text.secondary" align="center">
+          Sign in to view your saved courses.
+        </Typography>
+      </Container>
     );
+  }
+
+  return (
+    <Container sx={{ mt: 4, pb: 8 }}>
+      <Typography variant="h4" gutterBottom>
+        Saved Courses
+      </Typography>
+      <Grid container spacing={3}>
+        {courses.map((course) => (
+          <Grid item xs={12} sm={6} md={4} key={course.id}>
+            <Link to={`/courses/${course.id}`} style={{ textDecoration: 'none' }}>
+              <Card sx={{ height: '100%', '&:hover': { boxShadow: 6 } }}>
+                <CardContent>
+                  <Typography variant="h6" component="div">
+                    {course.title}
+                  </Typography>
+                  <Typography color="text.secondary">
+                    Credits: {course.credits}
+                  </Typography>
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button
+                      onClick={(e) => handleUnsaveClick(e, course)}
+                      color="primary"
+                      sx={{ minWidth: 'auto' }}
+                    >
+                      <BookmarkIcon />
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Link>
+          </Grid>
+        ))}
+        {courses.length === 0 && (
+          <Grid item xs={12}>
+            <Typography variant="h6" color="text.secondary" align="center">
+              No saved courses yet.
+            </Typography>
+          </Grid>
+        )}
+      </Grid>
+
+      <ConfirmUnsave
+        openDialog={openDialog}
+        onClose={() => setOpenDialog(false)}
+        onConfirm={() => unsaveCourse(selectedCourse?.id)}
+        courseTitle={selectedCourse?.title}
+      />
+    </Container>
+  );
 }
 
-export default SavedCourses; 
+export default SavedCourses;
