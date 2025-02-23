@@ -26,13 +26,7 @@ export default function OnboardingLogic() {
         try {
             await axios.post(
                 `${API_BASE_URL}/onboarding`,
-                { major: formData.major, year: formData.year },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            // Update full_name separately since it's not in UserOnboarding model
-            await axios.patch(
-                `${API_BASE_URL}/profile`,
-                { full_name: formData.fullName },
+                { major: formData.major, year: formData.year, full_name: formData.fullName},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             navigate('/profile');

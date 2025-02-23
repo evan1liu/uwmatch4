@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 from datetime import datetime, timedelta
 from uuid import uuid4
 import re
-from ..models.user import UserSignup, UserInDB, UserOnboarding, Token
+from ..models.user import UserInDB, UserOnboarding
 from ..auth import create_access_token, get_current_active_user
 from ..config import Settings
 from ..database import user_collection
@@ -13,7 +13,10 @@ from fastapi import Depends
 router = APIRouter()
 
 @router.post("/request-verification")
-async def request_verification(email: str = Form(...)):
+async def request_verification(
+    email: str = Form(...),
+    domain: str = Form(...)
+):
     # Validate email domain
     if not re.match(r".*@wisc\.edu$", email, re.IGNORECASE):
         raise HTTPException(status_code=400, detail="Only wisc.edu email addresses are allowed.")
@@ -38,16 +41,19 @@ async def request_verification(email: str = Form(...)):
         {"$set": {"verification_token": token, "token_expiration": expiration}}
     )
 
+    # Build the verification link using the front-end domain
+    verification_url = f"{domain}/api/verify?token={token}&email={email}"
+
     # Send verification email
     try:
-        send_verification_email(email, token)
+        send_verification_email(email, verification_url)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    return {"message": "Verification email sent. Please check your email to log in."}
+    return {"message": "Verification email sent. Please check your email."}
 
 @router.get("/verify")
-async def verify_email(token: str, email: str):
+async def verify_email(token: str, email: str, domain: str):
     user = await user_collection.find_one({"email": email})
     if not user or user.get("verification_token") != token:
         raise HTTPException(status_code=400, detail="Invalid verification link")
@@ -69,14 +75,11 @@ async def verify_email(token: str, email: str):
     )
 
     # Issue JWT token
-    access_token_expires = timedelta(minutes=Settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": email}, expires_delta=access_token_expires
-    )
+    access_token = create_access_token(data={"sub": email})
 
     # Redirect to frontend with token
-    frontend_url = f"https://www.uwmatch.com/login?token={access_token}"
-    return RedirectResponse(url=frontend_url)
+    redirect_url = f"{domain}/login?token={access_token}"
+    return RedirectResponse(url=redirect_url)
 
 @router.post("/onboarding")
 async def onboarding_user(user_data: UserOnboarding, current_user: UserInDB = Depends(get_current_active_user)):

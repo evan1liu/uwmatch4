@@ -166,20 +166,6 @@ export default function Sidebar() {
             >
               {!isCollapsed && <ListItemText primary="Login" sx={{ color: '#1565c0' }} />}
             </ListItemButton>
-            <ListItemButton
-              onClick={() => navigate('/signup')}
-              sx={{
-                backgroundColor: "##91c7fa",
-                '&:hover': {
-                  border: '2px solid #1976d2', // Deeper blue border on hover
-                },
-                borderRadius: '8px',
-                mb: 0.5,
-                pl: 9
-              }}
-            >
-              {!isCollapsed && <ListItemText primary="Sign Up" sx={{ color: '#1565c0' }}/> }
-            </ListItemButton>
           </>
         )}
         </List>

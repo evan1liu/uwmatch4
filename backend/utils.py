@@ -13,9 +13,7 @@ from backend.config import Settings
 # def verify_password(plain_password: str, hashed_password: str) -> bool:
 #     return pwd_context.verify(plain_password, hashed_password) 
 
-def send_verification_email(email: str, token: str):
-    # Construct the verification URL (adjust domain based on your deployment)
-    verification_url = f"https://www.uwmatch.com/api/verify?token={token}&email={email}"
+def send_verification_email(email: str, verification_url: str):
     subject = "Verify Your Email for UW Match"
     body = f"""
     Hello,
@@ -34,7 +32,6 @@ def send_verification_email(email: str, token: str):
     try:
         with smtplib.SMTP(Settings.SMTP_HOST, Settings.SMTP_PORT) as server:
             server.starttls()
-            server.set_debuglevel(1) 
             server.login(Settings.SMTP_USERNAME, Settings.SMTP_PASSWORD)
             server.send_message(msg)
     except Exception as e:

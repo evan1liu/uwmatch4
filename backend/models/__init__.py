@@ -1,7 +1,6 @@
 from .user import (
     User, 
     UserInDB, 
-    UserSignup, 
     UserOnboarding,
     Token,
     TokenData
@@ -13,7 +12,6 @@ from .search import SearchInput
 __all__ = [
     "User",
     "UserInDB",
-    "UserSignup",
     "UserOnboarding",
     "Token",
     "TokenData",

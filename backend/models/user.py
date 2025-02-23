@@ -2,12 +2,8 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
-class UserSignup(BaseModel):
-    fullName: str
-    email: str
-    # Removed password since we're using email verification
-
 class UserOnboarding(BaseModel):
+    full_name: str
     major: str
     year: str 
 

@@ -10,6 +10,44 @@ export default function LoginLogic() {
     const [message, setMessage] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
+    const [isVerifying, setIsVerifying] = useState(false);  // State for loading animation
+
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const token = params.get('token');
+        if (token) {
+            setIsVerifying(true);  // Show loading animation
+            Cookies.set('token', token, { expires: 30, secure: true, sameSite: 'strict' });
+            const fetchUserData = async () => {
+                try {
+                    const response = await axios.get(`${API_BASE_URL}/profile`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+                    if (!response.data.major || !response.data.year) {
+                        navigate('/onboarding');  // Redirect to onboarding if incomplete
+                    } else {
+                        navigate('/profile');  // Redirect to profile if complete
+                    }
+                } catch (err) {
+                    console.error('Error fetching user data:', err);
+                    navigate('/login');
+                } finally {
+                    setIsVerifying(false);  // Hide loading animation
+                }
+            };
+            fetchUserData();
+        }
+    }, [location, navigate]);
+
+    if (isVerifying) {
+        return (
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+                <img src="/path/to/uwmatch-logo.png" alt="UW Match Logo" style={{ width: '100px', marginBottom: '20px' }} />
+                <CircularProgress />
+                <Typography variant="h6" sx={{ mt: 2 }}>Verifying...</Typography>
+            </Box>
+        );
+    }
 
     // Handle token from verification redirect
     useEffect(() => {
@@ -65,6 +103,20 @@ export default function LoginLogic() {
             setMessage('Error sending verification email. Please try again.');
         }
     };
+
+    const FRONTEND_DOMAIN = import.meta.env.DEV 
+        ? 'http://127.0.0.1:3000'
+        : 'https://www.uwmatch.com';
+
+    async function requestVerification(email) {
+        const formData = new FormData();
+        formData.append('email', email);
+        formData.append('domain', FRONTEND_DOMAIN);
+
+        // POST to your FastAPI route
+        await axios.post(`${API_BASE_URL}/request-verification`, formData);
+    }
+
     return (
         <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Box sx={{ maxWidth: 400, width: '100%', p: 3 }}>
