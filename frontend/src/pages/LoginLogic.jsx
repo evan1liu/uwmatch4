@@ -1,64 +1,91 @@
-import { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import API_BASE_URL from '../api';
-import LoginForm from '../Forms/LoginForm';
-import { performPendingAction } from '../utils/authUtils';
 import Cookies from 'js-cookie';
+import { TextField, Button, Typography, Box } from '@mui/material';
 
 export default function LoginLogic() {
-    // this is a React state object for storing the login data in JavaScript object
-    const [formData, setFormData] = useState({
-        username: '',
-        password: ''
-    });
-    const [error, setError] = useState('');
+    const [email, setEmail] = useState('');
+    const [message, setMessage] = useState('');
     const navigate = useNavigate();
+    const location = useLocation();
 
-    const token = Cookies.get('token');
-    
-    if (token) {
-        // Redirect to /courses immediately if token exists
-        return <Navigate to="/courses" replace />;
-    }
-  
+    // Handle token from verification redirect
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const token = params.get('token');
+        if (token) {
+            Cookies.set('token', token, { expires: 30, secure: true, sameSite: 'strict' });
+            // Check if onboarding is needed after fetching user data
+            const fetchUserData = async () => {
+                try {
+                    const response = await axios.get(`${API_BASE_URL}/profile`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+                    if (!response.data.major || !response.data.year) {
+                        navigate('/onboarding');
+                    } else {
+                        navigate('/profile');
+                    }
+                } catch (err) {
+                    console.error('Error fetching user data:', err);
+                    navigate('/login');
+                }
+            };
+            fetchUserData();
+        }
+    }, [location, navigate]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // this specific format of sending login data to the backend is required by FastAPI's OAuth2PasswordRequestForm
-        const loginData = new FormData();
-        loginData.append('username', formData.username);
-        loginData.append('password', formData.password);
-
-        try { 
-            const response = await axios.post(`${API_BASE_URL}/token`, loginData, {
+        
+        // Optional: Validate email on the frontend
+        if (!email.endsWith('@wisc.edu')) {
+            setMessage('Please use a wisc.edu email address.');
+            return;
+        }
+    
+        try {
+            // Create form data
+            const formData = new URLSearchParams();
+            formData.append('email', email);
+    
+            // Send POST request with form data
+            const response = await axios.post(`${API_BASE_URL}/request-verification`, formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data',
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
             });
-            console.log('Server response:', response.data);
-            Cookies.set('token', response.data.access_token, { expires: 30, secure: true, sameSite: 'strict' });
-            await performPendingAction(response.data.access_token);
-            navigate('/profile');
+    
+            setMessage(response.data.message);
+            setEmail(''); // Clear input after success
         } catch (err) {
-            console.error('Login error:', err);
-            setError(`Invalid username or password
-                     (Haven't signed up yet? Sign up now!)`);
+            console.error('Verification request error:', err.response?.data || err);
+            setMessage('Error sending verification email. Please try again.');
         }
     };
-
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
-
     return (
-        <LoginForm
-            formData={formData}
-            handleChange={handleChange}
-            handleSubmit={handleSubmit}
-            error={error}
-        />
+        <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box sx={{ maxWidth: 400, width: '100%', p: 3 }}>
+                <Typography variant="h5" align="center" gutterBottom>
+                    Login / Signup
+                </Typography>
+                <form onSubmit={handleSubmit}>
+                    <TextField
+                        fullWidth
+                        label="Wisc.edu Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        margin="normal"
+                    />
+                    <Button fullWidth variant="contained" type="submit" sx={{ mt: 2 }}>
+                        Send Verification Email
+                    </Button>
+                    {message && <Typography align="center" sx={{ mt: 2 }}>{message}</Typography>}
+                </form>
+            </Box>
+        </Box>
     );
 }

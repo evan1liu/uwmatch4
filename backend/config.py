@@ -16,3 +16,13 @@ class Settings:
     MONGODB_URI: str = os.getenv("MONGODB_URI")
     # get the "ENV" variable from the .env, if it's not defined, default to "development" 
     ENV: str = os.getenv("ENV", "development")
+
+    # SMTP settings for GoDaddy
+    SMTP_HOST: str = os.getenv("SMTP_HOST")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT"))
+    SMTP_USERNAME: str = os.getenv("SMTP_USERNAME")
+    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD")
+
+# for testing
+# if __name__ == "__main__":
+#     print(Settings.SMTP_HOST)

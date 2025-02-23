@@ -7,8 +7,10 @@ from fastapi.security import OAuth2PasswordBearer
 from backend.config import Settings
 from backend.database import user_collection
 from backend.models import Token, TokenData, UserInDB
+from backend.utils import verify_password
 
-# Token endpoint is no longer used for password login, but kept for OAuth2 compatibility
+# this OAuth2PasswordBearer is a FastAPI security utility
+# the parameter that is passed in specifies the endpoint where the user can obtain a token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/token")
 
 async def get_user(email: str) -> Optional[UserInDB]:
@@ -17,6 +19,14 @@ async def get_user(email: str) -> Optional[UserInDB]:
         user_dict['id'] = str(user_dict['_id'])
         return UserInDB(**user_dict)
     return None
+
+async def authenticate_user(email: str, password: str) -> Optional[UserInDB]:
+    user = await get_user(email)
+    if not user:
+        return None
+    if not verify_password(password, user.hashed_password):
+        return None
+    return user
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
@@ -44,11 +54,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
         raise credentials_exception
 
     user = await get_user(email=token_data.email)
-    if user is None or not user.verified:
+    if user is None:
         raise credentials_exception
     return user
 
 async def get_current_active_user(current_user: UserInDB = Depends(get_current_user)) -> UserInDB:
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
+    return current_user 
