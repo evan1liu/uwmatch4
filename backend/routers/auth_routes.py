@@ -15,7 +15,6 @@ router = APIRouter()
 @router.post("/request-verification")
 async def request_verification(
     email: str = Form(...),
-    domain: str = Form(...)
 ):
     # Validate email domain
     if not re.match(r".*@wisc\.edu$", email, re.IGNORECASE):
@@ -41,8 +40,13 @@ async def request_verification(
         {"$set": {"verification_token": token, "token_expiration": expiration}}
     )
 
+    if Settings.ENV == "development":
+        backend_domain = "http://127.0.0.1:8000"
+    else:
+        backend_domain = "www.uwmatch.com"
+
     # Build the verification link using the front-end domain
-    verification_url = f"{domain}/api/verify?token={token}&email={email}"
+    verification_url = f"{backend_domain}/api/verify?token={token}&email={email}"
 
     # Send verification email
     try:
@@ -53,7 +57,7 @@ async def request_verification(
     return {"message": "Verification email sent. Please check your email."}
 
 @router.get("/verify")
-async def verify_email(token: str, email: str, domain: str):
+async def verify_email(token: str, email: str):
     user = await user_collection.find_one({"email": email})
     if not user or user.get("verification_token") != token:
         raise HTTPException(status_code=400, detail="Invalid verification link")
@@ -68,6 +72,11 @@ async def verify_email(token: str, email: str, domain: str):
             {"$set": {"verified": True}}
         )
 
+    if Settings.ENV == "development":
+        frontend_domain = "http://localhost:5173"
+    else:
+        frontend_domain = "www.uwmatch.com"
+
     # Clear the token
     await user_collection.update_one(
         {"email": email},
@@ -77,8 +86,10 @@ async def verify_email(token: str, email: str, domain: str):
     # Issue JWT token
     access_token = create_access_token(data={"sub": email})
 
-    # Redirect to frontend with token
-    redirect_url = f"{domain}/login?token={access_token}"
+    # Redirect to frontend with the "LOGGED IN TOKEN" 
+    redirect_url = f"{frontend_domain}/login?token={access_token}"
+    print("ENV:", Settings.ENV)
+    print("Redirecting to:", redirect_url)
     return RedirectResponse(url=redirect_url)
 
 @router.post("/onboarding")
