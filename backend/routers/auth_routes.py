@@ -40,10 +40,12 @@ async def request_verification(
         {"$set": {"verification_token": token, "token_expiration": expiration}}
     )
 
+    # here, we determine whether or not we're in development mode or production mode
+    # based on the mode, we have different backend domains, therefore different verification urls
     if Settings.ENV == "development":
         backend_domain = "http://127.0.0.1:8000"
     else:
-        backend_domain = "www.uwmatch.com"
+        backend_domain = "https://www.uwmatch.com" # must include the front "https://" for secure connection
 
     # Build the verification link using the front-end domain
     verification_url = f"{backend_domain}/api/verify?token={token}&email={email}"
@@ -72,10 +74,13 @@ async def verify_email(token: str, email: str):
             {"$set": {"verified": True}}
         )
 
+    # here, we determine whether or not we're in development mode or production mode
+    # based on the mode, we have different backend domains, therefore different redirect urls
+
     if Settings.ENV == "development":
         frontend_domain = "http://localhost:5173"
     else:
-        frontend_domain = "www.uwmatch.com"
+        frontend_domain = "https://www.uwmatch.com" # must include the front "https://" for secure connection
 
     # Clear the token
     await user_collection.update_one(
@@ -92,6 +97,8 @@ async def verify_email(token: str, email: str):
     print("Redirecting to:", redirect_url)
     return RedirectResponse(url=redirect_url)
 
+# when the user first signs in
+# if he doesn't have any major, year, or full name data, then he's asked to fill out the onboarding form
 @router.post("/onboarding")
 async def onboarding_user(user_data: UserOnboarding, current_user: UserInDB = Depends(get_current_active_user)):
     result = await user_collection.update_one(
